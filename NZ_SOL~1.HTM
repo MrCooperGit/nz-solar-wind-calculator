@@ -1,0 +1,2382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NZ Ground-Mount Solar Wind Load Calculator | AS/NZS 1170.2</title>
+<style>
+  :root {
+    --navy: #003366;
+    --teal: #007a7a;
+    --green: #2e7d32;
+    --amber: #e65100;
+    --red: #b71c1c;
+    --light: #f4f6f9;
+    --border: #ccd3de;
+    --text: #1a1a2e;
+    --card: #ffffff;
+    --accent: #0055a4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); color: var(--text); font-size: 14px; }
+
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, #0055a4 100%);
+    color: white; padding: 16px 24px; display: flex; align-items: center; gap: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  header .logo { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
+  header .subtitle { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+  header .badge { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  header .badge span {
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 12px; padding: 3px 10px; font-size: 11px;
+  }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+  .disclaimer {
+    background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px;
+    padding: 10px 14px; margin-bottom: 18px; font-size: 12px; color: #6d4c00;
+  }
+  .disclaimer strong { color: #5d3a00; }
+
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--navy); margin-bottom: 20px; }
+  .tab {
+    padding: 10px 22px; cursor: pointer; font-weight: 600; font-size: 13px;
+    border-radius: 6px 6px 0 0; border: 2px solid transparent;
+    background: #e0e8f0; color: #555; margin-bottom: -2px;
+    transition: all 0.15s;
+  }
+  .tab.active {
+    background: white; border-color: var(--navy) var(--navy) white var(--navy);
+    color: var(--navy);
+  }
+  .tab:hover:not(.active) { background: #c8d8e8; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+  @media (max-width: 700px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 18px; margin-bottom: 18px;
+  }
+  .card h3 {
+    font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--navy); border-bottom: 2px solid var(--navy); padding-bottom: 8px; margin-bottom: 14px;
+  }
+
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: #444; margin-bottom: 4px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 5px;
+    font-size: 13px; background: #fafcff; color: var(--text);
+    transition: border-color 0.2s;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+  .field .hint { font-size: 11px; color: #777; margin-top: 3px; }
+  .field .unit { font-size: 11px; color: #888; }
+
+  .field-row { display: flex; gap: 10px; align-items: flex-end; }
+  .field-row .field { flex: 1; margin-bottom: 0; }
+
+  .btn {
+    display: inline-block; padding: 10px 22px; border-radius: 6px; font-size: 13px;
+    font-weight: 700; cursor: pointer; border: none; transition: all 0.15s;
+  }
+  .btn-primary { background: var(--navy); color: white; }
+  .btn-primary:hover { background: var(--accent); }
+  .btn-success { background: var(--green); color: white; }
+  .btn-success:hover { background: #1b5e20; }
+  .btn-outline { background: white; color: var(--navy); border: 2px solid var(--navy); }
+  .btn-outline:hover { background: var(--light); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+
+  .calc-btn-row { display: flex; gap: 12px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+
+  /* Results */
+  .result-hero {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px; margin-bottom: 20px;
+  }
+  .result-box {
+    background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+    padding: 16px; text-align: center;
+  }
+  .result-box .label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 6px; }
+  .result-box .value { font-size: 28px; font-weight: 800; line-height: 1; }
+  .result-box .sub { font-size: 11px; color: #888; margin-top: 4px; }
+  .result-box.low { border-color: #4caf50; background: #e8f5e9; }
+  .result-box.low .value { color: #2e7d32; }
+  .result-box.med { border-color: #ff9800; background: #fff3e0; }
+  .result-box.med .value { color: #e65100; }
+  .result-box.high { border-color: #f44336; background: #ffebee; }
+  .result-box.high .value { color: #b71c1c; }
+  .result-box.info { border-color: var(--navy); background: #e8eef7; }
+  .result-box.info .value { color: var(--navy); }
+
+  .result-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .result-table th {
+    background: var(--navy); color: white; padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase;
+  }
+  .result-table td { padding: 8px 12px; border-bottom: 1px solid #eee; }
+  .result-table tr:hover td { background: #f5f8ff; }
+  .result-table .num { text-align: right; font-family: monospace; font-weight: 600; }
+  .result-table tr.section td { background: #e8eef7; font-weight: 700; color: var(--navy); font-size: 12px; }
+
+  /* Wind compass */
+  .compass-wrap { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .compass-svg { flex-shrink: 0; }
+  .compass-table { flex: 1; min-width: 200px; }
+
+  /* Calculation report */
+  .calc-step {
+    background: #f8faff; border-left: 4px solid var(--accent); padding: 10px 14px;
+    margin-bottom: 10px; border-radius: 0 6px 6px 0; font-size: 13px;
+  }
+  .calc-step .step-title { font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .calc-step .formula { font-family: monospace; background: white; border: 1px solid #ddd;
+    padding: 4px 8px; border-radius: 4px; display: inline-block; margin: 3px 0; font-size: 12px; }
+  .calc-step .result { color: var(--green); font-weight: 700; }
+
+  /* Wind zone indicator */
+  .wind-zone-bar {
+    display: flex; border-radius: 8px; overflow: hidden; height: 36px; margin: 10px 0;
+  }
+  .wz-seg {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white; cursor: default;
+    transition: opacity 0.2s;
+  }
+  .wz-seg.active { outline: 3px solid #000; outline-offset: -3px; }
+  .wz-L { background: #43a047; }
+  .wz-M { background: #fb8c00; }
+  .wz-H { background: #e53935; }
+  .wz-VH { background: #8e24aa; }
+  .wz-EH { background: #37474f; }
+
+  .notice { background: #e3f2fd; border: 1px solid #90caf9; border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #01579b; margin: 8px 0; }
+  .warn { background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #6d4c00; margin: 8px 0; }
+  .success-msg { background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #1b5e20; margin: 8px 0; }
+
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  /* Diagram */
+  .panel-diagram { width: 100%; max-width: 500px; margin: 0 auto; display: block; }
+
+  @media print {
+    header, .tabs, .calc-btn-row, .btn { display: none; }
+    .tab-content { display: block !important; }
+    .card { break-inside: avoid; }
+  }
+
+  /* geocode / autocomplete */
+  #geocode-status { font-size: 12px; margin-top: 4px; min-height: 18px; }
+  .geocode-ok { color: var(--green); }
+  .geocode-err { color: var(--red); }
+  .geocode-loading { color: #888; }
+
+  .addr-wrap { position: relative; }
+  #autocomplete-list {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 999;
+    background: white; border: 1px solid var(--accent); border-top: none;
+    border-radius: 0 0 6px 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    max-height: 240px; overflow-y: auto;
+  }
+  .ac-item {
+    padding: 8px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f0f0f0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .ac-item:last-child { border-bottom: none; }
+  .ac-item:hover, .ac-item.active { background: #e8f0fd; }
+  .ac-item .ac-main { font-weight: 600; color: var(--text); }
+  .ac-item .ac-sub { font-size: 11px; color: #777; }
+
+  .wind-zone-auto {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 5px;
+    padding: 6px 12px; font-size: 12px; color: #1b5e20; margin-top: 6px;
+  }
+  .wind-zone-auto .wz-dot {
+    width: 12px; height: 12px; border-radius: 50%; display: inline-block;
+  }
+
+  .required-note { font-size: 11px; color: #888; margin-bottom: 12px; }
+
+  /* Structure type selector */
+  .struct-type-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .struct-card {
+    flex: 1; min-width: 200px; border: 2px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; cursor: pointer; transition: all 0.15s; background: #fafcff;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .struct-card input[type=radio] { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0; }
+  .struct-card.active { border-color: var(--accent); background: #e8f0fd; }
+  .struct-card .sc-title { font-weight: 700; font-size: 13px; color: var(--navy); }
+  .struct-card .sc-desc { font-size: 11px; color: #666; margin-top: 3px; line-height: 1.4; }
+  .inline-info { display: inline-block; background: #e8eef7; border-radius: 4px; padding: 2px 6px; font-size: 11px; color: var(--navy); margin-left: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">☀ NZ Solar Wind Load</div>
+    <div class="subtitle">Ground-Mounted Photovoltaic Array — Structural Wind Load Calculator</div>
+  </div>
+  <div class="badge">
+    <span>AS/NZS 1170.2:2021</span>
+    <span>NZS 3604:2011</span>
+    <span>IEC 62817</span>
+    <span>BRANZ Wind Zones</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="disclaimer">
+    <strong>⚠ Engineering Disclaimer:</strong> This calculator is a design aid only. Results must be verified by a suitably qualified Chartered Professional Engineer (CPEng) licensed to practice in New Zealand. All designs must comply with the New Zealand Building Code (NZBC) and applicable Standards. Regional wind speed values are from AS/NZS 1170.2:2011 — verify against the current AS/NZS 1170.2:2021 standard. Not for use as the sole basis for building consent applications. BRANZ wind zone data is indicative only.
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('inputs')">① Site & Inputs</div>
+    <div class="tab" onclick="switchTab('results')">② Results</div>
+    <div class="tab" onclick="switchTab('report')">③ Calculation Report</div>
+    <div class="tab" onclick="switchTab('reference')">④ Reference Data</div>
+  </div>
+
+  <!-- ===== INPUTS TAB ===== -->
+  <div id="tab-inputs" class="tab-content active">
+
+    <!-- Project Info -->
+    <div class="card">
+      <h3>Project Details</h3>
+      <div class="grid3">
+        <div class="field"><label>Project Name</label><input id="proj-name" type="text" value="Solar PV Array — Ground Mount" /></div>
+        <div class="field"><label>Engineer / Designer</label><input id="proj-eng" type="text" placeholder="Name, CPEng" /></div>
+        <div class="field"><label>Date</label><input id="proj-date" type="date" /></div>
+      </div>
+    </div>
+
+    <!-- Location -->
+    <div class="card">
+      <h3>Site Location & Wind Region</h3>
+      <div class="grid2">
+        <div>
+          <div class="field">
+            <label>Street Address (New Zealand) — type to search</label>
+            <div class="addr-wrap">
+              <input id="address-input" type="text" placeholder="e.g. 12 Lambton Quay, Wellington" autocomplete="off" />
+              <div id="autocomplete-list" style="display:none;"></div>
+            </div>
+            <div id="geocode-status" style="margin-top:5px;"></div>
+            <div id="wind-zone-result" style="display:none;" class="wind-zone-auto">
+              <span class="wz-dot" id="wz-auto-dot"></span>
+              <span id="wz-auto-text"></span>
+              <span style="color:#888;font-size:11px;" id="wz-auto-src"></span>
+            </div>
+            <div class="hint" style="margin-top:6px;">Powered by <a href="https://photon.komoot.io" target="_blank">Photon/OpenStreetMap</a>. Wind zone auto-populated for Greater Wellington from live GIS data.</div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Latitude (°S, negative)</label><input id="site-lat" type="number" step="0.00001" placeholder="-41.28664" /></div>
+            <div class="field"><label>Longitude (°E)</label><input id="site-lon" type="number" step="0.00001" placeholder="174.77557" /></div>
+          </div>
+          <div class="notice">
+            🗺 For addresses outside Wellington: <a href="https://experience.arcgis.com/experience/6e83b0bb19d14a0db411aebdc301cf49" target="_blank"><strong>BRANZ Maps</strong></a> — enter your address to get Wind Zone, Wind Region and Lee Zone.
+          </div>
+        </div>
+        <div>
+          <div class="field">
+            <label>NZ Wind Region (AS/NZS 1170.2)</label>
+            <select id="wind-region">
+              <option value="NZ1">NZ1 (formerly A6) — Northern/Central North Island: Auckland, Waikato, Bay of Plenty, Taranaki, Hawke's Bay</option>
+              <option value="NZ2" selected>NZ2 (formerly A7) — Rest of NZ: Wellington district, South Island (excl. exposed coasts)</option>
+              <option value="NZ3">NZ3 (formerly W) — Cook Strait, Wellington exposed, Marlborough Sounds, Canterbury foothills</option>
+              <option value="NZ4">NZ4 — Extreme exposure: Fiordland, exposed Southland, wind tunnel valleys</option>
+            </select>
+            <div class="hint">Refer to Figure 3.1(B) in AS/NZS 1170.2:2021 or the BRANZ wind region map.</div>
+          </div>
+          <div class="field">
+            <label>NZS 3604 Wind Zone (from BRANZ Maps)</label>
+            <select id="wind-zone-nzs">
+              <option value="L">Low — 32 m/s ULS</option>
+              <option value="M">Medium — 37 m/s ULS</option>
+              <option value="H" selected>High — 44 m/s ULS</option>
+              <option value="VH">Very High — 50 m/s ULS</option>
+              <option value="EH">Extra High — 55 m/s ULS</option>
+            </select>
+            <div class="hint">Use for simplified NZS 3604-based check. For full engineering design use AS/NZS 1170.2 method.</div>
+          </div>
+          <div class="field">
+            <label>In Lee Zone?</label>
+            <select id="lee-zone">
+              <option value="no">No</option>
+              <option value="yes">Yes — site is in a lee zone (apply lee multiplier per NZS 3604)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="grid3">
+        <div class="field">
+          <label>Importance Level (AS/NZS 1170.0 Table 3.1)</label>
+          <select id="importance-level">
+            <option value="IL1">IL1 — Low consequence (post-disaster non-critical)</option>
+            <option value="IL2" selected>IL2 — Normal (residential, commercial &lt;300 persons)</option>
+            <option value="IL3">IL3 — High (post-disaster, critical infrastructure)</option>
+            <option value="IL4">IL4 — Exceptional (hospitals, emergency services)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Design Working Life</label>
+          <select id="design-life">
+            <option value="25" selected>25 years (solar PV typical)</option>
+            <option value="50">50 years (standard)</option>
+            <option value="100">100 years</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Annual Probability of Exceedance (1/R)</label>
+          <input id="ari-display" type="text" readonly style="background:#eee;" />
+          <div class="hint">Return period R (years) from IL + design life.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Site Parameters -->
+    <div class="card">
+      <h3>Site Parameters</h3>
+      <div class="grid3">
+        <div class="field">
+          <label>Terrain Category (AS/NZS 1170.2 Cl. 4.2)</label>
+          <select id="terrain-cat">
+            <option value="TC1">TC1 — Open water, flat treeless plains (coastal, airfield)</option>
+            <option value="TC2" selected>TC2 — Open grassland, scattered trees, farmland</option>
+            <option value="TC2.5">TC2.5 — Scattered houses, outer suburban areas</option>
+            <option value="TC3">TC3 — Suburban housing, dense forest, light industrial</option>
+            <option value="TC4">TC4 — City centre, large industrial complex</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Topographic Class (Cl. 4.4)</label>
+          <select id="topo-class">
+            <option value="flat">Flat or gently rolling (Mt ≤ 1.0)</option>
+            <option value="hill">Gentle hill / slope (Mt = 1.05)</option>
+            <option value="ridge">Exposed ridge or hill crest (Mt = 1.15)</option>
+            <option value="cliff">Escarpment or cliff top (Mt = 1.25)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Shielding Multiplier Ms</label>
+          <select id="shielding">
+            <option value="0.85">0.85 — Well shielded (dense surrounding buildings)</option>
+            <option value="0.95">0.95 — Moderate shielding</option>
+            <option value="1.00" selected>1.00 — No shielding (conservative / open site)</option>
+          </select>
+          <div class="hint">For open rural sites use 1.00 (conservative).</div>
+        </div>
+        <div class="field">
+          <label>Altitude above sea level (m)</label>
+          <input id="site-altitude" type="number" value="0" min="0" max="2000" />
+          <div class="hint">Air density correction: ρ = 1.2 × e^(-h/8500)</div>
+        </div>
+        <div class="field">
+          <label>Climate Change Multiplier Mc</label>
+          <select id="cc-mult">
+            <option value="1.00">1.00 — Standard (pre-2021)</option>
+            <option value="1.05" selected>1.05 — AS/NZS 1170.2:2021 NZ regions (recommended)</option>
+            <option value="1.10">1.10 — Conservative / long design life</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Corrosion/Exposure Zone (NZS 3604)</label>
+          <select id="corrosion-zone">
+            <option value="B">Zone B — Inland (low risk)</option>
+            <option value="C" selected>Zone C — Within 500m coast or urban</option>
+            <option value="D">Zone D — Within 100m coast, offshore island, harbour</option>
+          </select>
+          <div class="hint">Affects material selection (steel, fasteners, coatings).</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Array -->
+    <div class="card">
+      <h3>PV Panel Array Configuration</h3>
+      <div class="grid2">
+        <div>
+          <div class="grid2">
+            <div class="field"><label>Panel Width (across slope) m</label><input id="panel-w" type="number" value="1.134" step="0.001" /></div>
+            <div class="field"><label>Panel Height (along slope) m</label><input id="panel-h" type="number" value="2.094" step="0.001" /></div>
+            <div class="field"><label>Panels per Row (columns)</label><input id="panels-cols" type="number" value="10" min="1" /></div>
+            <div class="field"><label>Number of Rows</label><input id="panels-rows" type="number" value="2" min="1" /></div>
+            <div class="field"><label>Panel Tilt Angle α (°)</label><input id="panel-tilt" type="number" value="36" min="0" max="90" /></div>
+            <div class="field">
+              <label>Panel Azimuth (° from North)</label>
+              <input id="panel-azimuth" type="number" value="0" min="0" max="359" />
+              <div class="hint">0° = North-facing (panel face). 180° = South-facing.</div>
+            </div>
+          </div>
+          <div class="notice" style="font-size:11px;">
+            <strong>Azimuth convention:</strong> Enter the direction the panel face points toward (normal to panel surface, projected onto ground). Panels in NZ typically face North (0°) for maximum solar gain.
+          </div>
+        </div>
+        <div>
+          <div class="grid2">
+            <div class="field"><label>Clearance h₁ (bottom of panel to ground) m</label><input id="clearance-bottom" type="number" value="0.5" step="0.1" min="0" /></div>
+            <div class="field"><label>Row Pitch (m)</label><input id="row-pitch" type="number" value="5.0" step="0.1" min="1" /><div class="hint">Ground distance from the front (low) edge of one row to the front edge of the next row. Used for shading and multi-row array depth only — does not affect wind load per row.</div></div>
+            <div class="field"><label>Panel Module Mass (kg)</label><input id="panel-mass" type="number" value="25" step="0.5" /></div>
+            <div class="field"><label>Self-Weight of Frame (kg/m²)</label><input id="frame-sw" type="number" value="5" step="0.5" /></div>
+            <div class="field"><label>Snow Depth (mm) — AS/NZS 1170.3</label><input id="snow-depth" type="number" value="50" step="10" min="0" /><div class="hint">0 = no snow. 50 mm typical NZ low-altitude; 100–200 mm for alpine sites.</div></div>
+            <div class="field"><label>Snow Density</label><select id="snow-density"><option value="100">Fresh snow — 100 kg/m³</option><option value="200" selected>Compacted snow — 200 kg/m³ (design value)</option><option value="300">Wet snow — 300 kg/m³</option></select></div>
+          </div>
+          <canvas id="panel-diagram" width="360" height="200" style="width:100%;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;margin-top:8px;"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wind Direction Analysis -->
+    <div class="card">
+      <h3>Wind Direction Analysis</h3>
+      <div class="compass-wrap">
+        <canvas id="compass-canvas" width="200" height="200" class="compass-svg"></canvas>
+        <div class="compass-table" style="flex:1;">
+          <p style="font-size:12px;margin-bottom:10px;color:#555;">The 8 cardinal wind directions are analysed. The critical direction produces maximum load on the panel face (wind perpendicular to tilted surface).</p>
+          <div id="direction-table"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Frame / Structure -->
+    <div class="card">
+      <h3>Frame & Foundation Configuration</h3>
+
+      <!-- Structure Type Selector -->
+      <div class="field" style="margin-bottom:4px;"><label>Structure Type</label></div>
+      <div class="struct-type-row">
+        <label class="struct-card active" id="sc-rack" onclick="setStructType('rack')">
+          <input type="radio" name="struct-type" id="struct-rack" value="rack" checked />
+          <div>
+            <div class="sc-title">🏗 Rack / Table Array</div>
+            <div class="sc-desc">Multiple posts supporting a panel array on horizontal rails. E.g. 18-panel double table, 2×9 at 36° on 4 legs.</div>
+          </div>
+        </label>
+        <label class="struct-card" id="sc-singlepole" onclick="setStructType('singlepole')">
+          <input type="radio" name="struct-type" id="struct-singlepole" value="singlepole" />
+          <div>
+            <div class="sc-title">🪝 Single Pole (2-Panel Portrait)</div>
+            <div class="sc-desc">One φ89 steel pole per 2-panel portrait unit. Uplift/overturning check per AS/NZS 1170.2 with Cfig per XMLP calc sheet.</div>
+          </div>
+        </label>
+      </div>
+
+      <!-- ── RACK TABLE INPUTS ── -->
+      <div id="inputs-rack">
+        <div class="notice" style="margin-bottom:12px;font-size:12px;">
+          <strong>Based on XMLP (Xiamen Landpower) SAP2000 calculation report.</strong>
+          Wind and snow surface pressures are calculated per AS/NZS 1170.2 / 1170.3 and applied as shell element loads. Post pull-out is taken from the SAP2000 result, scaled to the site design wind speed.
+        </div>
+        <div class="grid3">
+          <div class="field">
+            <label>Post Spacing (m) — centre to centre</label>
+            <input id="post-spacing" type="number" value="2.4" step="0.1" min="0.5" />
+            <div class="hint">Used to determine number of ground screws per row and load per post. Typical: 2.4 m (18-panel table, 5 posts).</div>
+          </div>
+        </div>
+      </div><!-- end #inputs-rack -->
+
+      <!-- ── SINGLE POLE INPUTS ── -->
+      <div id="inputs-singlepole" style="display:none">
+        <div class="notice" style="margin-bottom:12px;font-size:12px;">
+          <strong>Based on Xiamen Landpower XMLP calculation sheet (AS/NZS 1170.2-2021).</strong>
+          Forces decomposed normal to panel surface. ULS combinations: pull-out = 1.35·F<sub>v,up</sub> − 0.9(G+S); compression = 1.35·F<sub>v,down</sub> + 1.2(G+S).
+        </div>
+        <h4 style="color:var(--navy);margin-bottom:10px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">A — Pole Section (Steel)</h4>
+        <div class="grid3">
+          <div class="field">
+            <label>Pole OD (mm)</label>
+            <input id="pole-od" type="number" value="89" min="20" />
+            <div class="hint">φ89 per drawing default.</div>
+          </div>
+          <div class="field">
+            <label>Pole Wall Thickness (mm)</label>
+            <input id="pole-t" type="number" value="3" step="0.5" min="1" />
+          </div>
+          <div class="field">
+            <label>Height above grade to array centroid (m)</label>
+            <input id="pole-height-centroid" type="number" value="1" step="0.1" min="0.1" />
+            <div class="hint">Vertical distance from top of ground screw (grade) to the centroid of the panel array. This is the moment arm for pole bending. Default 1.0 m.</div>
+          </div>
+          <div class="field">
+            <label>Pole embedment depth in ground screw (mm)</label>
+            <input id="pole-embed-depth" type="number" value="600" step="50" min="100" />
+            <div class="hint">How far the φ89 CHS drops inside the φ114 ground screw. Minimum 600 mm typical. Used for information only — bending check is at grade level.</div>
+          </div>
+          <div class="field">
+            <label>Pole-to-Ground Screw Connection</label>
+            <select id="pole-bolt-grade">
+              <option value="4.6">2 × M12 Grade 4.6 — f<sub>uf</sub> = 400 MPa</option>
+              <option value="8.8" selected>2 × M12 Grade 8.8 — f<sub>uf</sub> = 800 MPa</option>
+            </select>
+            <div class="hint">2 × M12 bolts connecting pole flange to ground screw head. Grade 8.8 is typical for structural connections.</div>
+          </div>
+          <div class="field">
+            <label>Steel Grade</label>
+            <select id="pole-grade">
+              <option value="235" selected>Q235 — fy = 235 MPa</option>
+              <option value="250">G250 — fy = 250 MPa</option>
+              <option value="350">G350 — fy = 350 MPa</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Modules per Pole</label>
+            <select id="pole-modules">
+              <option value="2" selected>2 modules (1×2 portrait — standard)</option>
+              <option value="4">4 modules (2×2 portrait)</option>
+              <option value="1">1 module (single)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Module Mass per Module (kg)</label>
+            <input id="pole-module-mass" type="number" value="21" step="0.5" />
+            <div class="hint">Typical: 21 kg/module (42 kg for 2 modules).</div>
+          </div>
+          <div class="field">
+            <label>Steel Support Mass (kg)</label>
+            <input id="pole-support-mass" type="number" value="15" step="1" />
+            <div class="hint">Pole + adapter + hardware mass. Default 15 kg per XMLP sheet.</div>
+          </div>
+        </div>
+
+        <hr class="section-divider">
+        <h4 style="color:var(--navy);margin-bottom:10px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">B — Load Position &amp; Pressure Coefficients (C<sub>fig</sub>)</h4>
+        <div class="grid3">
+          <div class="field">
+            <label>Array Position</label>
+            <select id="pole-position">
+              <option value="standalone" selected>Standalone / Edge unit (worst case)</option>
+              <option value="internal">Internal array unit</option>
+            </select>
+            <div class="hint">Standalone: C<sub>fig,up</sub>=−1.8. Internal: C<sub>fig,up</sub>=−1.3. Both use C<sub>fig,down</sub>=+1.4.</div>
+          </div>
+          <div class="field">
+            <label>C<sub>fig</sub> Uplift (suction, auto)</label>
+            <input id="pole-cfig-up" type="number" value="-1.8" step="0.1" />
+            <div class="hint">Negative. Auto-set from position, or override.</div>
+          </div>
+          <div class="field">
+            <label>C<sub>fig</sub> Downward pressure (auto)</label>
+            <input id="pole-cfig-down" type="number" value="1.4" step="0.1" />
+            <div class="hint">Positive. Default +1.4 per XMLP sheet.</div>
+          </div>
+        </div>
+      </div><!-- end #inputs-singlepole -->
+
+      <!-- ── COMMON FOUNDATION SECTION ── -->
+      <hr class="section-divider">
+      <h4 style="color:var(--navy);margin-bottom:10px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">C — Foundation / Anchors</h4>
+      <div class="grid3">
+        <div class="field">
+          <label>Foundation Type</label>
+          <select id="found-type" onchange="updateAnchorDefaults()">
+            <option value="ground-screw">Ground screw / helical pile</option>
+            <option value="concrete-pad" selected>Concrete pad footing</option>
+            <option value="concrete-pier">Concrete pier / bored pile</option>
+            <option value="ballast">Ballast / surface mount (no penetration)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="anchor-dia-label">Anchor Bolt Diameter (mm)</label>
+          <input id="anchor-dia" type="number" value="16" min="8" />
+          <div class="hint" id="anchor-dia-hint" style="display:none">2 × M12 bolts (pole flange to ground screw head)</div>
+        </div>
+        <div class="field">
+          <label>Anchor Bolt Grade</label>
+          <select id="anchor-grade">
+            <option value="4.6">Grade 4.6 — fu = 400 MPa</option>
+            <option value="8.8" selected>Grade 8.8 — fu = 800 MPa</option>
+            <option value="ss316">SS316 — fu = 480 MPa (stainless)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="calc-btn-row">
+      <button class="btn btn-success" onclick="calculate()">⚡ Calculate Wind Loads</button>
+      <button class="btn btn-outline" onclick="resetForm()">↺ Reset</button>
+      <button class="btn btn-outline" onclick="window.print()">🖨 Print Report</button>
+    </div>
+
+  </div><!-- end inputs tab -->
+
+  <!-- ===== RESULTS TAB ===== -->
+  <div id="tab-results" class="tab-content">
+    <div id="results-placeholder" class="notice">Run the calculation first (Tab 1 → Calculate Wind Loads).</div>
+    <div id="results-content" style="display:none">
+
+      <div id="result-hero" class="result-hero"></div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Wind Speed Calculation Summary</h3>
+          <table class="result-table" id="speed-table"></table>
+        </div>
+        <div class="card">
+          <h3>Wind Zone — NZS 3604</h3>
+          <div class="wind-zone-bar">
+            <div class="wz-seg wz-L" id="wz-L">LOW<br>32</div>
+            <div class="wz-seg wz-M" id="wz-M">MED<br>37</div>
+            <div class="wz-seg wz-H" id="wz-H">HIGH<br>44</div>
+            <div class="wz-seg wz-VH" id="wz-VH">V.HIGH<br>50</div>
+            <div class="wz-seg wz-EH" id="wz-EH">E.HIGH<br>55</div>
+          </div>
+          <div id="zone-description" style="margin-top:10px;font-size:13px;"></div>
+          <hr class="section-divider">
+          <h3 style="margin-top:12px;">Pressure Summary</h3>
+          <table class="result-table" id="pressure-table"></table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Wind Forces on Array</h3>
+        <table class="result-table" id="forces-table"></table>
+      </div>
+
+      <!-- Rack Table results -->
+      <div id="results-rack">
+        <div class="grid2">
+          <div class="card">
+            <h3>A — Wind Load Calculation (AS/NZS 1170.2)</h3>
+            <table class="result-table" id="rack-wind-table"></table>
+          </div>
+          <div class="card">
+            <h3>B — Snow Load Calculation (AS/NZS 1170.3)</h3>
+            <table class="result-table" id="rack-snow-table"></table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>C — SAP2000 Load Summary &amp; Post Pull-out</h3>
+          <table class="result-table" id="rack-sap-table"></table>
+        </div>
+      </div>
+      <!-- Single Pole results -->
+      <div id="results-singlepole" style="display:none">
+        <div class="grid2">
+          <div class="card">
+            <h3>A — ULS Structural Forces (Single Pole)</h3>
+            <table class="result-table" id="pole-forces-table"></table>
+          </div>
+          <div class="card">
+            <h3>B — Pole Bending Check (AS 4100)</h3>
+            <table class="result-table" id="pole-bending-table"></table>
+          </div>
+        </div>
+      </div>
+      <!-- Common foundation -->
+      <div class="card">
+        <h3>C — Foundation / Anchor Check</h3>
+        <table class="result-table" id="anchor-table"></table>
+      </div>
+
+      <div class="card" id="warnings-card">
+        <h3>Engineering Notes & Flags</h3>
+        <div id="warnings-content"></div>
+      </div>
+
+    </div>
+  </div><!-- end results tab -->
+
+  <!-- ===== REPORT TAB ===== -->
+  <div id="tab-report" class="tab-content">
+    <div id="report-placeholder" class="notice">Run the calculation first.</div>
+    <div id="report-content" style="display:none">
+      <div class="card" id="report-body"></div>
+    </div>
+  </div>
+
+  <!-- ===== REFERENCE TAB ===== -->
+  <div id="tab-reference" class="tab-content">
+    <div class="grid2">
+      <div class="card">
+        <h3>NZ Wind Regions (AS/NZS 1170.2)</h3>
+        <table class="result-table">
+          <tr><th>Region</th><th>Former Name</th><th>Key Areas</th><th>VR500 (m/s)</th></tr>
+          <tr><td>NZ1</td><td>A6</td><td>Auckland, Waikato, Bay of Plenty, Taranaki, northern NI</td><td class="num">41</td></tr>
+          <tr><td>NZ2</td><td>A7</td><td>Wellington, Manawatu, Hawke's Bay, S Island (sheltered)</td><td class="num">48</td></tr>
+          <tr><td>NZ3</td><td>W</td><td>Cook Strait, Wellington exposed coasts, Marlborough, Canterbury foothills</td><td class="num">62</td></tr>
+          <tr><td>NZ4</td><td>—</td><td>Extreme exposure sites, Fiordland coasts, channelled valleys</td><td class="num">67</td></tr>
+        </table>
+        <div class="hint" style="margin-top:8px;">Values from AS/NZS 1170.2:2011 (Table 3.1(B)). Verify against 2021 standard. R=500 shown for IL2 structures.</div>
+      </div>
+      <div class="card">
+        <h3>NZS 3604 Wind Zones</h3>
+        <table class="result-table">
+          <tr><th>Zone</th><th>ULS Speed (m/s)</th><th>SLS Speed (m/s)</th><th>Typical Location</th></tr>
+          <tr><td>Low (L)</td><td class="num">32</td><td class="num">21</td><td>Sheltered inland sites</td></tr>
+          <tr><td>Medium (M)</td><td class="num">37</td><td class="num">25</td><td>Open inland areas</td></tr>
+          <tr><td>High (H)</td><td class="num">44</td><td class="num">30</td><td>Exposed sites, coastal</td></tr>
+          <tr><td>Very High (VH)</td><td class="num">50</td><td class="num">34</td><td>Very exposed, Cook Strait</td></tr>
+          <tr><td>Extra High (EH)</td><td class="num">55</td><td class="num">37</td><td>Specific engineering required above</td></tr>
+        </table>
+        <div class="hint" style="margin-top:8px;">Source: BRANZ Bulletin 588 (May 2023) & NZS 3604:2011.</div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Terrain/Height Multiplier Mz,cat (AS/NZS 1170.2 Table 4.1)</h3>
+        <table class="result-table">
+          <tr><th>Height z (m)</th><th>TC1</th><th>TC2</th><th>TC2.5</th><th>TC3</th><th>TC4</th></tr>
+          <tr><td>≤3</td><td class="num">0.99</td><td class="num">0.91</td><td class="num">0.87</td><td class="num">0.83</td><td class="num">0.75</td></tr>
+          <tr><td>5</td><td class="num">1.05</td><td class="num">0.91</td><td class="num">0.87</td><td class="num">0.83</td><td class="num">0.75</td></tr>
+          <tr><td>10</td><td class="num">1.12</td><td class="num">1.00</td><td class="num">0.95</td><td class="num">0.83</td><td class="num">0.75</td></tr>
+          <tr><td>15</td><td class="num">1.16</td><td class="num">1.05</td><td class="num">1.00</td><td class="num">0.89</td><td class="num">0.80</td></tr>
+          <tr><td>20</td><td class="num">1.19</td><td class="num">1.08</td><td class="num">1.03</td><td class="num">0.94</td><td class="num">0.83</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>NZ Wind Direction Multipliers Md (Table 3.2(B))</h3>
+        <table class="result-table">
+          <tr><th>Direction</th><th>NZ1 (A6)</th><th>NZ2 (A7)</th><th>NZ3 (W)</th><th>NZ4</th></tr>
+          <tr><td>N</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td></tr>
+          <tr><td>NE</td><td class="num">1.00</td><td class="num">0.90</td><td class="num">0.90</td><td class="num">1.00</td></tr>
+          <tr><td>E</td><td class="num">0.80</td><td class="num">0.80</td><td class="num">0.80</td><td class="num">0.90</td></tr>
+          <tr><td>SE</td><td class="num">0.80</td><td class="num">0.80</td><td class="num">0.80</td><td class="num">0.90</td></tr>
+          <tr><td>S</td><td class="num">0.80</td><td class="num">0.90</td><td class="num">1.00</td><td class="num">1.00</td></tr>
+          <tr><td>SW</td><td class="num">0.80</td><td class="num">1.00</td><td class="num">0.90</td><td class="num">1.00</td></tr>
+          <tr><td>W</td><td class="num">0.90</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td></tr>
+          <tr><td>NW</td><td class="num">1.00</td><td class="num">0.90</td><td class="num">1.00</td><td class="num">1.00</td></tr>
+        </table>
+        <div class="hint" style="margin-top:8px;">Source: AS/NZS 1170.2:2011 Table 3.2(B). Verify against 2021 standard.</div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Net Pressure Coefficients — Ground-Mounted Solar Panels (Cp,net)</h3>
+        <table class="result-table">
+          <tr><th>Tilt α (°)</th><th>Cp,net Uplift (max)</th><th>Cp,net Downforce (max)</th><th>Source Basis</th></tr>
+          <tr><td>5</td><td class="num">−1.5</td><td class="num">+0.9</td><td>ASCE 7-16 Table 29.4-1 / research</td></tr>
+          <tr><td>10</td><td class="num">−1.5</td><td class="num">+1.0</td><td></td></tr>
+          <tr><td>15</td><td class="num">−1.5</td><td class="num">+1.2</td><td></td></tr>
+          <tr><td>20</td><td class="num">−1.5</td><td class="num">+1.3</td><td></td></tr>
+          <tr><td>25</td><td class="num">−1.4</td><td class="num">+1.4</td><td></td></tr>
+          <tr><td>30</td><td class="num">−1.3</td><td class="num">+1.4</td><td>AS/NZS 1170.2 Table 5.4 canopy roofs</td></tr>
+          <tr><td>40</td><td class="num">−1.2</td><td class="num">+1.3</td><td></td></tr>
+          <tr><td>45</td><td class="num">−1.0</td><td class="num">+1.2</td><td></td></tr>
+          <tr><td>60</td><td class="num">−0.8</td><td class="num">+1.0</td><td></td></tr>
+        </table>
+        <div class="warn" style="margin-top:8px;">Note: AS/NZS 1170.2 does not have a dedicated solar panel table. These coefficients are derived from the closest applicable clauses (Table 5.4 canopy roofs, Table 5.5 freestanding walls/signs) and published wind tunnel research. A CPEng should review and may require wind tunnel testing for large or unusual arrays.</div>
+      </div>
+      <div class="card">
+        <h3>Applicable Standards & References</h3>
+        <table class="result-table">
+          <tr><th>Standard / Reference</th><th>Scope</th></tr>
+          <tr><td>AS/NZS 1170.2:2021</td><td>Wind actions on structures (primary wind standard)</td></tr>
+          <tr><td>AS/NZS 1170.0:2002</td><td>General structural design principles, limit states</td></tr>
+          <tr><td>NZS 3604:2011</td><td>Timber-framed buildings (wind zone classification)</td></tr>
+          <tr><td>AS/NZS 4600:2018</td><td>Cold-formed steel structures (purlins, rails)</td></tr>
+          <tr><td>AS 4100:2020</td><td>Hot-rolled steel structures (posts, frames)</td></tr>
+          <tr><td>NZS 3101:2006</td><td>Concrete structures (foundations)</td></tr>
+          <tr><td>IEC 62817:2014</td><td>Solar trackers — Design qualification (IEC wind loads)</td></tr>
+          <tr><td>IEC 61215:2021</td><td>Terrestrial PV modules — design qualification</td></tr>
+          <tr><td>ASCE 7-16 §29.4</td><td>Ground-mounted solar panel wind loads (US standard, referenced)</td></tr>
+          <tr><td>BRANZ Bulletin 588</td><td>NZ wind zone calculations (May 2023)</td></tr>
+          <tr><td>NZ Building Code B1</td><td>Structure — performance requirements</td></tr>
+        </table>
+      </div>
+    </div>
+  </div><!-- end reference tab -->
+
+</div><!-- end container -->
+
+<script>
+// ======================================================
+// DATA TABLES
+// ======================================================
+const VR_TABLE = {
+  // NZ regional wind speed m/s by return period (Table 3.1(B) AS/NZS 1170.2:2011)
+  // [R5, R10, R20, R25, R50, R100, R200, R500, R1000, R2000]
+  NZ1: [22, 24, 27, 27, 30, 33, 37, 41, 44, 47],
+  NZ2: [26, 28, 31, 32, 35, 39, 43, 48, 52, 56],
+  NZ3: [29, 32, 36, 37, 41, 47, 54, 62, 67, 73],
+  NZ4: [32, 35, 40, 41, 45, 51, 59, 67, 73, 79],
+};
+const R_PERIODS = [5, 10, 20, 25, 50, 100, 200, 500, 1000, 2000];
+
+// Importance level to probability of exceedance mapping (AS/NZS 1170.0 Table 3.1)
+// Returns [probability_ULS, R_ULS] based on design life
+function getDesignARI(il, life) {
+  // Simplified: AS/NZS 1170.0 Table F1
+  const map = {
+    IL1: { 25: 100, 50: 200, 100: 500 },
+    IL2: { 25: 200, 50: 500, 100: 1000 },
+    IL3: { 25: 500, 50: 1000, 100: 2000 },
+    IL4: { 25: 1000, 50: 2000, 100: 2500 },
+  };
+  return map[il]?.[life] ?? 500;
+}
+
+// Terrain/height multiplier Mz,cat
+const MZ_TABLE = {
+  TC1:   { 3: 0.99, 5: 1.05, 7: 1.08, 10: 1.12, 15: 1.16, 20: 1.19, 30: 1.22, 40: 1.24, 50: 1.25 },
+  TC2:   { 3: 0.91, 5: 0.91, 7: 0.94, 10: 1.00, 15: 1.05, 20: 1.08, 30: 1.12, 40: 1.16, 50: 1.18 },
+  'TC2.5':{ 3: 0.87, 5: 0.87, 7: 0.90, 10: 0.95, 15: 1.00, 20: 1.03, 30: 1.08, 40: 1.12, 50: 1.14 },
+  TC3:   { 3: 0.83, 5: 0.83, 7: 0.83, 10: 0.83, 15: 0.89, 20: 0.94, 30: 1.00, 40: 1.04, 50: 1.07 },
+  TC4:   { 3: 0.75, 5: 0.75, 7: 0.75, 10: 0.75, 15: 0.75, 20: 0.75, 30: 0.80, 40: 0.85, 50: 0.90 },
+};
+
+function getMzCat(tc, height) {
+  const row = MZ_TABLE[tc] || MZ_TABLE['TC2'];
+  const heights = Object.keys(row).map(Number).sort((a,b) => a-b);
+  if (height <= heights[0]) return row[heights[0]];
+  if (height >= heights[heights.length-1]) return row[heights[heights.length-1]];
+  for (let i = 0; i < heights.length-1; i++) {
+    if (height >= heights[i] && height <= heights[i+1]) {
+      const t = (height - heights[i]) / (heights[i+1] - heights[i]);
+      return row[heights[i]] + t * (row[heights[i+1]] - row[heights[i]]);
+    }
+  }
+  return 1.0;
+}
+
+// Wind direction multipliers Md (Table 3.2(B))
+const MD_TABLE = {
+  //        N     NE    E     SE    S     SW    W     NW
+  NZ1: [1.00, 1.00, 0.80, 0.80, 0.80, 0.80, 0.90, 1.00],
+  NZ2: [1.00, 0.90, 0.80, 0.80, 0.90, 1.00, 1.00, 0.90],
+  NZ3: [1.00, 0.90, 0.80, 0.80, 1.00, 0.90, 1.00, 1.00],
+  NZ4: [1.00, 1.00, 0.90, 0.90, 1.00, 1.00, 1.00, 1.00],
+};
+const DIRS = ['N','NE','E','SE','S','SW','W','NW'];
+const DIR_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315]; // degrees from N
+
+// Topographic multiplier
+const MT_MAP = { flat: 1.00, hill: 1.05, ridge: 1.15, cliff: 1.25 };
+
+// Net pressure coefficients for ground-mounted panels
+// [tilt, Cp_up (negative=suction/uplift), Cp_down (positive)]
+const CP_TABLE = [
+  [0,  -0.60, 0.60],
+  [5,  -1.50, 0.90],
+  [10, -1.50, 1.00],
+  [15, -1.50, 1.20],
+  [20, -1.50, 1.30],
+  [25, -1.40, 1.40],
+  [30, -1.30, 1.40],
+  [35, -1.25, 1.40],
+  [40, -1.20, 1.30],
+  [45, -1.00, 1.20],
+  [60, -0.80, 1.00],
+  [90, -0.60, 0.80],
+];
+
+function getCp(tilt) {
+  if (tilt <= CP_TABLE[0][0]) return { up: CP_TABLE[0][1], down: CP_TABLE[0][2] };
+  if (tilt >= CP_TABLE[CP_TABLE.length-1][0]) {
+    const l = CP_TABLE[CP_TABLE.length-1];
+    return { up: l[1], down: l[2] };
+  }
+  for (let i = 0; i < CP_TABLE.length-1; i++) {
+    const [t0, u0, d0] = CP_TABLE[i];
+    const [t1, u1, d1] = CP_TABLE[i+1];
+    if (tilt >= t0 && tilt <= t1) {
+      const frac = (tilt - t0) / (t1 - t0);
+      return { up: u0 + frac*(u1-u0), down: d0 + frac*(d1-d0) };
+    }
+  }
+  return { up: -1.0, down: 1.0 };
+}
+
+// Get VR by interpolation
+function getVR(region, R) {
+  const vrs = VR_TABLE[region];
+  if (!vrs) return 46;
+  if (R <= R_PERIODS[0]) return vrs[0];
+  if (R >= R_PERIODS[R_PERIODS.length-1]) return vrs[R_PERIODS.length-1];
+  for (let i = 0; i < R_PERIODS.length-1; i++) {
+    if (R >= R_PERIODS[i] && R <= R_PERIODS[i+1]) {
+      const frac = (R - R_PERIODS[i]) / (R_PERIODS[i+1] - R_PERIODS[i]);
+      return vrs[i] + frac * (vrs[i+1] - vrs[i]);
+    }
+  }
+  return vrs[7]; // fallback 500yr
+}
+
+// NZS 3604 wind zone
+const NZS_ZONES = { L: 32, M: 37, H: 44, VH: 50, EH: 55 };
+
+// ======================================================
+// UI HELPERS
+// ======================================================
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['inputs','results','report','reference'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+function val(id) { return document.getElementById(id)?.value ?? ''; }
+function numVal(id, def=0) { return parseFloat(document.getElementById(id)?.value) || def; }
+
+function updateARI() {
+  const il = val('importance-level');
+  const life = parseInt(val('design-life'));
+  const R = getDesignARI(il, life);
+  document.getElementById('ari-display').value = `1/${R} (R = ${R} years)`;
+}
+
+// ======================================================
+// ADDRESS AUTOCOMPLETE (Photon by Komoot — free, no API key)
+// ======================================================
+// ======================================================
+// STRUCTURE TYPE TOGGLE
+// ======================================================
+function setStructType(type) {
+  document.getElementById('struct-rack').checked      = (type === 'rack');
+  document.getElementById('struct-singlepole').checked = (type === 'singlepole');
+  document.getElementById('sc-rack').classList.toggle('active', type === 'rack');
+  document.getElementById('sc-singlepole').classList.toggle('active', type === 'singlepole');
+  document.getElementById('inputs-rack').style.display        = type === 'rack'       ? '' : 'none';
+  document.getElementById('inputs-singlepole').style.display  = type === 'singlepole' ? '' : 'none';
+  // Update Cfig when switching to singlepole
+  if (type === 'singlepole') updatePoleCfig();
+}
+
+function updatePoleCfig() {
+  const pos = document.getElementById('pole-position');
+  if (!pos) return;
+  const isStandalone = pos.value === 'standalone';
+  const upEl   = document.getElementById('pole-cfig-up');
+  const downEl = document.getElementById('pole-cfig-down');
+  if (upEl)   upEl.value   = isStandalone ? -1.8 : -1.3;
+  if (downEl) downEl.value = 1.4;
+}
+
+function updateAnchorDefaults() {
+  const foundType = document.getElementById('found-type').value;
+  const diaEl     = document.getElementById('anchor-dia');
+  const hintEl    = document.getElementById('anchor-dia-hint');
+  const gradeEl   = document.getElementById('anchor-grade');
+  if (foundType === 'ground-screw') {
+    diaEl.value = 12;
+    if (hintEl) hintEl.style.display = '';
+    // Match grade to the pole bolt grade if available
+    const poleBoltGrade = document.getElementById('pole-bolt-grade');
+    if (gradeEl && poleBoltGrade) gradeEl.value = poleBoltGrade.value;
+  } else {
+    diaEl.value = 16;
+    if (hintEl) hintEl.style.display = 'none';
+  }
+}
+
+let _acDebounce = null;
+let _acItems = [];
+let _acIndex = -1;
+
+function initAddressAutocomplete() {
+  const input = document.getElementById('address-input');
+  const list  = document.getElementById('autocomplete-list');
+  if (!input || !list) return;
+
+  input.addEventListener('input', () => {
+    clearTimeout(_acDebounce);
+    const q = input.value.trim();
+    if (q.length < 3) { closeAC(); return; }
+    _acDebounce = setTimeout(() => fetchSuggestions(q), 280);
+  });
+
+  input.addEventListener('keydown', e => {
+    if (list.style.display === 'none') return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); moveAC(1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); moveAC(-1); }
+    else if (e.key === 'Enter')  { e.preventDefault(); selectAC(_acIndex >= 0 ? _acIndex : 0); }
+    else if (e.key === 'Escape') { closeAC(); }
+  });
+
+  // Prevent autocomplete list mousedown from stealing focus (so blur doesn't fire before onmousedown)
+  list.addEventListener('mousedown', e => e.preventDefault());
+
+  // Close dropdown on outside click
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.addr-wrap')) closeAC();
+  });
+}
+
+async function fetchSuggestions(q) {
+  const list   = document.getElementById('autocomplete-list');
+  const status = document.getElementById('geocode-status');
+
+  // Show searching indicator
+  list.innerHTML = '<div class="ac-item" style="color:#888;font-style:italic;">Searching…</div>';
+  list.style.display = 'block';
+
+  try {
+    // Photon by Komoot — bbox = lon_min,lat_min,lon_max,lat_max covering all of NZ
+    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=8&bbox=165.0,-47.5,178.5,-34.0&lang=en`;
+    const res  = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    // Rely on bbox for NZ filtering; also accept any result that mentions NZ in country
+    const features = (data.features || []).filter(f => {
+      const c = (f.properties.country || '').toLowerCase();
+      // Accept if country mentions zealand, or if bbox already limited it (no country field)
+      return c.includes('zealand') || c === 'nz' || c === '' || !f.properties.country;
+    });
+
+    _acItems = features;
+    _acIndex = -1;
+
+    if (features.length === 0) {
+      list.innerHTML = '<div class="ac-item" style="color:#888;font-style:italic;">No NZ addresses found</div>';
+      list.style.display = 'block';
+      return;
+    }
+
+    list.innerHTML = features.map((f, i) => {
+      const p    = f.properties;
+      const main = [p.housenumber, p.street].filter(Boolean).join(' ')
+                   || p.name || p.city || p.county || '';
+      const sub  = [p.suburb || p.district, p.city || p.county, p.state].filter(Boolean).join(', ');
+      return `<div class="ac-item" data-index="${i}" onmousedown="selectAC(${i})">
+        <span class="ac-main">${escHtml(main)}</span>
+        <span class="ac-sub">${escHtml(sub)}</span>
+      </div>`;
+    }).join('');
+
+    list.style.display = 'block';
+  } catch(e) {
+    list.innerHTML = `<div class="ac-item" style="color:var(--red);font-size:12px;">
+      ⚠ Address lookup failed (${e.message}). Try entering lat/lon manually.</div>`;
+    list.style.display = 'block';
+  }
+}
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function moveAC(dir) {
+  const items = document.querySelectorAll('.ac-item');
+  if (!items.length) return;
+  items.forEach(el => el.classList.remove('active'));
+  _acIndex = Math.max(0, Math.min(items.length - 1, _acIndex + dir));
+  items[_acIndex].classList.add('active');
+  items[_acIndex].scrollIntoView({ block: 'nearest' });
+}
+
+function selectAC(idx) {
+  if (!_acItems[idx]) return;
+  const f   = _acItems[idx];
+  const p   = f.properties;
+  const lon = f.geometry.coordinates[0];
+  const lat = f.geometry.coordinates[1];
+
+  // Build a readable label
+  const main = [p.housenumber, p.street].filter(Boolean).join(' ') || p.name || '';
+  const sub  = [p.district || p.suburb, p.city, p.state].filter(Boolean).join(', ');
+  const label = [main, sub].filter(Boolean).join(', ');
+
+  document.getElementById('address-input').value = label;
+  document.getElementById('site-lat').value = lat.toFixed(5);
+  document.getElementById('site-lon').value = lon.toFixed(5);
+
+  const statusEl = document.getElementById('geocode-status');
+  statusEl.innerHTML = `✓ ${label}`;
+  statusEl.className = 'geocode-ok';
+
+  closeAC();
+  suggestWindRegion(lat, lon);
+  queryGWWindZone(lat, lon);   // attempt live wind zone lookup
+}
+
+function closeAC() {
+  const list = document.getElementById('autocomplete-list');
+  if (list) list.style.display = 'none';
+  _acIndex = -1;
+}
+
+// ======================================================
+// WIND REGION HEURISTIC (fallback for non-GW areas)
+// ======================================================
+function suggestWindRegion(lat, lon) {
+  let suggestion = 'NZ2';
+  if      (lat > -38)                                    suggestion = 'NZ1'; // northern NI
+  else if (lat > -42.5 && lat < -40.5 && lon > 173.5)   suggestion = 'NZ3'; // Wellington/Cook Strait
+  else if (lat < -45.5)                                  suggestion = 'NZ3'; // southern SI exposed
+  document.getElementById('wind-region').value = suggestion;
+}
+
+// ======================================================
+// GREATER WELLINGTON WIND ZONE — LIVE GIS QUERY
+// Source: Greater Wellington Regional Council ArcGIS REST service
+// https://mapping.gw.govt.nz/arcgis/rest/services/Hazards/Wind_Zones/MapServer/0
+// Covers WCC, HCC, UHCC, PCC, KCDC, Wairarapa councils (2017 data)
+// ======================================================
+const GW_ZONE_COLORS = { L:'#43a047', M:'#fb8c00', H:'#e53935', VH:'#8e24aa', EH:'#37474f', SED:'#b71c1c' };
+
+async function queryGWWindZone(lat, lon) {
+  const resultEl = document.getElementById('wind-zone-result');
+  const dotEl    = document.getElementById('wz-auto-dot');
+  const textEl   = document.getElementById('wz-auto-text');
+  const srcEl    = document.getElementById('wz-auto-src');
+  resultEl.style.display = 'none';
+
+  try {
+    // Query ArcGIS REST: point-in-polygon, WGS84 input (inSR=4326)
+    const url = `https://mapping.gw.govt.nz/arcgis/rest/services/Hazards/Wind_Zones/MapServer/0/query`
+      + `?geometry=${lon},${lat}&geometryType=esriGeometryPoint&inSR=4326`
+      + `&spatialRel=esriSpatialRelIntersects`
+      + `&outFields=Zone_Name,Zone_Title,TA&returnGeometry=false&f=json`;
+
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (data.features && data.features.length > 0) {
+      const attr  = data.features[0].attributes;
+      const title = attr.Zone_Title || attr.Zone_Name || '';
+      const ta    = attr.TA || '';
+
+      // Map Zone_Title → L/M/H/VH/EH key
+      const zoneKey = parseGWZone(title);
+      if (zoneKey) {
+        // Auto-populate the NZS wind zone dropdown
+        document.getElementById('wind-zone-nzs').value = zoneKey;
+
+        dotEl.style.background  = GW_ZONE_COLORS[zoneKey] || '#888';
+        textEl.textContent = `Wind Zone: ${title.trim()} (${zoneKey}) — ${ta}`;
+        srcEl.textContent  = '— GW Regional Council GIS (live)';
+        resultEl.style.display = 'inline-flex';
+        resultEl.style.background = '#e8f5e9';
+        resultEl.style.borderColor = '#a5d6a7';
+      } else {
+        // Zone found but couldn't classify
+        dotEl.style.background = '#888';
+        textEl.textContent = `Zone: ${title.trim()} — verify manually`;
+        srcEl.textContent  = `TA: ${ta}`;
+        resultEl.style.display = 'inline-flex';
+        resultEl.style.background = '#fff8e1';
+        resultEl.style.borderColor = '#ffe082';
+      }
+    } else {
+      // Outside GW coverage — show BRANZ link prompt
+      document.getElementById('geocode-status').innerHTML +=
+        ' | <em>Outside GW coverage — <a href="https://experience.arcgis.com/experience/6e83b0bb19d14a0db411aebdc301cf49" target="_blank">check BRANZ Maps</a> for wind zone</em>';
+    }
+  } catch(e) {
+    // Silently ignore — GW service may be unavailable
+    document.getElementById('geocode-status').innerHTML +=
+      ' | <em>Wind zone lookup unavailable — <a href="https://experience.arcgis.com/experience/6e83b0bb19d14a0db411aebdc301cf49" target="_blank">check BRANZ Maps</a></em>';
+  }
+}
+
+function parseGWZone(raw) {
+  const s = (raw || '').toUpperCase();
+  if (s.includes('EXT') || s.includes(' EH') || s === 'EH')  return 'EH';
+  if (s.includes('VERY HIGH') || s.includes(' VH') || s === 'VH') return 'VH';
+  if (s.includes('HIGH'))   return 'H';
+  if (s.includes('MEDIUM') || s === 'M') return 'M';
+  if (s.includes('LOW')    || s === 'L') return 'L';
+  if (s.includes('SED') || s.includes('INDEPENDENT')) return 'EH'; // treat as EH/SED
+  return null;
+}
+
+// ======================================================
+// COMPASS DRAWING
+// ======================================================
+function drawCompass(azimuth) {
+  const c = document.getElementById('compass-canvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const cx = 100, cy = 100, r = 85;
+  ctx.clearRect(0, 0, 200, 200);
+
+  // Circle
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI);
+  ctx.fillStyle = '#f0f4ff'; ctx.fill();
+  ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // Direction labels
+  const labels = ['N','NE','E','SE','S','SW','W','NW'];
+  const angles = [0, 45, 90, 135, 180, 225, 270, 315];
+  labels.forEach((l, i) => {
+    const a = (angles[i] - 90) * Math.PI / 180;
+    const tx = cx + (r+0) * Math.cos(a);
+    const ty = cy + (r+0) * Math.sin(a);
+    ctx.font = i%2===0 ? 'bold 11px sans-serif' : '9px sans-serif';
+    ctx.fillStyle = '#333';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const lx = cx + (r-13) * Math.cos(a);
+    const ly = cy + (r-13) * Math.sin(a);
+    ctx.fillText(l, lx, ly);
+  });
+
+  // Panel normal arrow (direction panel faces)
+  const panelAngle = (azimuth - 90) * Math.PI / 180;
+  const px = cx + 55 * Math.cos(panelAngle);
+  const py = cy + 55 * Math.sin(panelAngle);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(px, py);
+  ctx.strokeStyle = '#0055a4'; ctx.lineWidth = 2.5;
+  ctx.stroke();
+  // Arrowhead
+  const headLen = 10;
+  ctx.beginPath();
+  ctx.moveTo(px, py);
+  ctx.lineTo(px - headLen*Math.cos(panelAngle-0.4), py - headLen*Math.sin(panelAngle-0.4));
+  ctx.moveTo(px, py);
+  ctx.lineTo(px - headLen*Math.cos(panelAngle+0.4), py - headLen*Math.sin(panelAngle+0.4));
+  ctx.strokeStyle = '#0055a4'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.font = 'bold 10px sans-serif'; ctx.fillStyle = '#0055a4';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('Panel', cx + 70*Math.cos(panelAngle), cy + 70*Math.sin(panelAngle));
+
+  // Cross
+  ctx.beginPath(); ctx.moveTo(cx, cy-4); ctx.lineTo(cx, cy+4);
+  ctx.moveTo(cx-4, cy); ctx.lineTo(cx+4, cy);
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 1; ctx.stroke();
+}
+
+function drawPanelDiagram() {
+  const c = document.getElementById('panel-diagram');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const tilt = numVal('panel-tilt', 20) * Math.PI / 180;
+  const ph = numVal('panel-h', 2.094);
+  const clear = numVal('clearance-bottom', 0.5);
+  const postH = numVal('post-height', 0.5);
+
+  const scale = 60;
+  const gY = H - 30;
+  const x0 = 80, x1 = x0 + ph * Math.cos(tilt) * scale;
+  const y0 = gY - (clear * scale), y1 = y0 - ph * Math.sin(tilt) * scale;
+
+  // Ground
+  ctx.fillStyle = '#8B7355';
+  ctx.fillRect(0, gY, W, H-gY);
+  ctx.fillStyle = '#90EE90';
+  ctx.fillRect(0, gY-3, W, 3);
+
+  // Post
+  const postY = gY;
+  const postTopY = gY - postH * scale;
+  ctx.strokeStyle = '#555'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(x0+10, postY); ctx.lineTo(x0+10, postTopY); ctx.stroke();
+
+  // Panel
+  ctx.strokeStyle = '#003366'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  ctx.fillStyle = 'rgba(30,80,160,0.3)';
+  ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
+  ctx.lineTo(x1, y1-4); ctx.lineTo(x0, y0-4); ctx.closePath(); ctx.fill();
+
+  // Labels
+  ctx.fillStyle = '#333'; ctx.font = '10px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(`α=${numVal('panel-tilt')}°`, x0+5, (y0+y1)/2-10);
+  ctx.fillText(`h₁=${clear}m`, 5, gY - clear*scale/2);
+
+  // Wind arrow
+  const wx = x1 + 60, wy = (y0 + y1) / 2;
+  ctx.strokeStyle = '#e65100'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(wx, wy); ctx.lineTo(wx - 50, wy); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(wx - 50, wy);
+  ctx.lineTo(wx - 35, wy - 8);
+  ctx.moveTo(wx - 50, wy);
+  ctx.lineTo(wx - 35, wy + 8);
+  ctx.stroke();
+  ctx.fillStyle = '#e65100'; ctx.font = 'bold 10px sans-serif';
+  ctx.fillText('Wind', wx - 20, wy - 12);
+
+  // Dimension: α arc
+  ctx.strokeStyle = '#888'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(x0, y0, 22, -Math.PI/2, -Math.PI/2 + tilt, false);
+  ctx.stroke();
+}
+
+// ======================================================
+// MAIN CALCULATION
+// ======================================================
+function calculate() {
+  // Inputs
+  const region = val('wind-region');
+  const il = val('importance-level');
+  const life = parseInt(val('design-life'));
+  const tc = val('terrain-cat');
+  const topo = val('topo-class');
+  const ms = numVal('shielding');
+  const mc = numVal('cc-mult');
+  const altitude = numVal('site-altitude', 0);
+  const leeZone = val('lee-zone') === 'yes';
+
+  const panelW = numVal('panel-w', 1.134);
+  const panelH_m = numVal('panel-h', 2.094);
+  const cols = Math.max(1, parseInt(val('panels-cols')));
+  const rows = Math.max(1, parseInt(val('panels-rows')));
+  const tilt = numVal('panel-tilt', 20);
+  const azimuth = numVal('panel-azimuth', 0);
+  const clearance = numVal('clearance-bottom', 0.5);
+  const rowPitch = numVal('row-pitch', 5);
+  const panelMass = numVal('panel-mass', 25);
+  const frameSW = numVal('frame-sw', 5);
+
+  // Structure type
+  const structType = document.querySelector('input[name="struct-type"]:checked')?.value || 'rack';
+  const snowDepth   = numVal('snow-depth', 50) / 1000;    // m
+  const snowDensity = numVal('snow-density', 200);         // kg/m³
+
+  // Rack table inputs
+  const postSpacing = numVal('post-spacing', 2.4);
+  const postHeight  = numVal('post-height', 0.5);
+  const postOD      = numVal('post-od', 89);
+  const postT       = numVal('post-t', 5);
+  const postType    = val('post-type') || 'CHS';
+  const steelFy     = numVal('steel-grade', 235);
+  const anchorDia   = numVal('anchor-dia', 16);
+
+  // Rail / beam inputs (rack table)
+  const railF0   = numVal('rail-f0', 215);
+  const railSpan = numVal('rail-span', 2.4);
+  const railLen  = numVal('rail-length', 4400);
+  const railMass = numVal('rail-mass', 6550);
+  const railZx   = numVal('rail-Zx', 6000);
+  const railCond = val('rail-condition') || 'ss';
+  const nRails   = parseInt(val('rails-per-row')) || 3;
+  const railLinMass  = railMass / railLen;               // g/mm
+  const railAreaMM2  = railLinMass / 0.0027;             // mm²
+  const railArea     = railAreaMM2;
+  const derivedEl = document.getElementById('rail-derived');
+  if (derivedEl) derivedEl.textContent =
+    `Derived cross-section area: ${railAreaMM2.toFixed(0)} mm² | Linear mass: ${(railLinMass*1000).toFixed(1)} g/m`;
+
+  // Single pole inputs
+  const poleOD           = numVal('pole-od', 89);
+  const poleT            = numVal('pole-t', 3);
+  const poleHeightCent   = numVal('pole-height-centroid', 1.0);   // m from grade to array centroid
+  const poleEmbedDepth   = numVal('pole-embed-depth', 600);       // mm inside ground screw
+  const poleBoltGrade    = val('pole-bolt-grade') || '8.8';
+  const poleBoltFuf      = poleBoltGrade === '4.6' ? 400 : 800;   // MPa
+  // M12 tensile stress area = 84.3 mm²; φVf per bolt (AS 4100 Cl 9.3.2.1, single shear in threads)
+  const m12As            = 84.3;
+  const pole_phi_Vf_per  = 0.8 * 0.62 * poleBoltFuf * m12As / 1000;  // kN per bolt
+  const pole_phi_Vf_2    = 2 * pole_phi_Vf_per;                        // kN for 2 bolts
+  const poleSteelFy      = numVal('pole-grade', 235);
+  const poleModules      = parseInt(val('pole-modules')) || 2;
+  const poleModMass      = numVal('pole-module-mass', 21);        // kg per module
+  const poleSupportMass  = numVal('pole-support-mass', 15);       // kg
+  const poleCfigUp       = numVal('pole-cfig-up', -1.8);          // negative
+  const poleCfigDown     = numVal('pole-cfig-down', 1.4);         // positive
+
+  const nzsZone = val('wind-zone-nzs');
+
+  // Return period
+  const R = getDesignARI(il, life);
+  const VR = getVR(region, R);
+
+  // Height at top of panel
+  const tiltRad = tilt * Math.PI / 180;
+  const heightTop = clearance + panelH_m * Math.sin(tiltRad);
+  const heightRef = Math.max(3, (clearance + heightTop) / 2); // reference height = centroid
+
+  // Multipliers
+  const Mc = mc;
+  const Mt = MT_MAP[topo] || 1.0;
+  const Mzcat = getMzCat(tc, heightRef);
+  const Ms = ms;
+  const MdRow = MD_TABLE[region] || MD_TABLE['NZ2'];
+
+  // Lee zone multiplier (NZS 3604: lee zone ≈ 1.25× wind speed for specific exposed areas)
+  const MleeSpeed = leeZone ? 1.1 : 1.0; // simplified approach
+
+  // Calculate Vsit for each direction
+  const dir_results = DIRS.map((dir, i) => {
+    const Md = MdRow[i];
+    const Vsit = VR * Mc * MleeSpeed * Md * Math.max(Mzcat * Ms, Mt);
+    return { dir, Md, Vsit };
+  });
+
+  // Critical wind direction: find direction most perpendicular to panel normal
+  // Panel normal azimuth in horizontal plane = azimuth input
+  // Most critical for uplift: wind from behind (reverse of panel face direction)
+  // Most critical for downforce: wind toward panel face
+  // We calculate load factor for each direction
+  const panelAzRad = azimuth * Math.PI / 180;
+  let maxVsit = 0;
+  let critDir = dir_results[0];
+  dir_results.forEach(d => {
+    // Wind from direction θ impacting panel at azimuth α
+    // Effective component = max load when wind is roughly perpendicular to panel (in elevation)
+    if (d.Vsit > maxVsit) { maxVsit = d.Vsit; critDir = d; }
+  });
+  const Vdes = maxVsit;
+
+  // Air density correction for altitude
+  const rho = 1.2 * Math.exp(-altitude / 8500);
+
+  // Design wind pressure (free stream dynamic pressure)
+  const qdes = 0.5 * rho * Vdes * Vdes; // Pa
+
+  // Net pressure coefficients for this tilt
+  const Cp = getCp(tilt);
+  const CpUp = Cp.up;    // negative (uplift/suction)
+  const CpDn = Cp.down;  // positive (downforce/pressure)
+
+  // Panel face area (per panel and total array)
+  const panelArea = panelW * panelH_m; // m² (per panel, actual sloped area)
+  const totalArea = panelArea * cols * rows;
+  const arrayWidth = panelW * cols;
+  const arrayDepth = panelH_m * Math.cos(tiltRad) * rows + (rows-1) * rowPitch;
+
+  // Projected area on horizontal plane
+  const projAreaHoriz = panelH_m * Math.cos(tiltRad) * panelW * cols * rows;
+  // Projected area on vertical plane (for drag)
+  const projAreaVert = panelH_m * Math.sin(tiltRad) * panelW * cols;
+
+  // Wind forces per panel (ULS)
+  const F_uplift_panel = Math.abs(CpUp) * qdes * panelArea;  // N (upward)
+  const F_down_panel   = CpDn * qdes * panelArea;             // N (downward)
+
+  // Per row forces
+  const F_uplift_row = F_uplift_panel * cols;  // N
+  const F_down_row   = F_down_panel * cols;
+
+  // Drag force (horizontal, on whole array) — simplification using Cd for inclined plate
+  // Cd ≈ Cp,net × sin(tilt) for horizontal component
+  const Cd = Math.abs(CpDn) * Math.sin(tiltRad);
+  const F_drag_total = Cd * qdes * projAreaHoriz;  // N (horizontal, in wind direction)
+
+  // Total array forces
+  const F_uplift_total = F_uplift_panel * cols * rows;
+  const F_down_total   = F_down_panel * cols * rows;
+
+  // Self-weight per row
+  const n_panels_row = cols;
+  const panelSW_row = panelMass * n_panels_row * 9.81;  // N
+  const frameSW_row = frameSW * panelArea * cols * 9.81; // N
+  const totalSW_row = panelSW_row + frameSW_row;         // N
+
+  // Overturning moment per row (about front support line)
+  // Taking moment about front edge at ground level
+  const armLow = clearance;  // m (height of bottom of panel)
+  const armMid = clearance + (panelH_m * Math.sin(tiltRad)) / 2; // centroid height
+  const panelHoriz = panelH_m * Math.cos(tiltRad);  // horizontal depth of panel
+  const M_overturn_row = F_uplift_row * (panelHoriz / 2) + F_drag_total / rows * armMid;  // N·m
+
+  // Anchor forces (post loading)
+  // Number of posts per row = ceil(arrayWidth / postSpacing) + 1
+  const nPosts = Math.ceil(arrayWidth / postSpacing) + 1;
+  const F_per_post_uplift = F_uplift_row / nPosts;  // N uplift per post
+  const F_per_post_comp   = (F_down_row + totalSW_row) / nPosts;  // N compression per post
+  const F_per_post_horiz  = F_drag_total / rows / nPosts;  // N horizontal per post
+
+  // ── SNOW LOAD (common) ────────────────────────────────────────────────────
+  // Slope correction factor Cs (AS/NZS 1170.3): 1.0 for θ≤15°, reduces for steeper
+  const Cs_snow = tilt > 15 ? Math.max(0, 1 - (tilt - 15) / 45) : 1.0;
+  // Horizontal projected area of whole array
+  const Ah_snow = panelH_m * Math.cos(tiltRad) * panelW * cols * rows;  // m²
+  // Snow weight on array
+  const sg = snowDensity * 9.81 * snowDepth;             // Pa (ground snow pressure)
+  const Fsnow_total = sg * Ah_snow * Cs_snow;            // N
+  const Fsnow_per_panel = sg * panelW * panelH_m * Math.cos(tiltRad) * Cs_snow; // N
+  // Snow surface pressure (normal to panel, for rail check)
+  const p_snow_normal = sg * Math.cos(tiltRad) * Cs_snow; // Pa
+
+  let postZx, postAg, postIx, Mpost, Mpost_cap, Mpost_util;
+  let Mrail, Mrail_cap, Mrail_util, w_rail, delta_mid, delta_allow, Cm;
+  let F_per_post_uplift_design, F_per_post_comp_design;
+  // Single pole specific
+  let pole_Fvert_uplift, pole_Fvert_press, pole_Fhoriz, pole_Mot;
+  let pole_Fpull_design, pole_Fcomp_design;
+  let pole_G_kN, poleZx, pole_Mcap, pole_Mutil, pole_Vuls, pole_Muls_base;
+
+  if (structType === 'rack') {
+    // ── A. RACK TABLE: POST BENDING CHECK (AS 4100, cantilever) ─────────────
+    const Mpost_val = F_per_post_horiz * armMid;   // N·m
+    Mpost = Mpost_val;
+
+    if (postType === 'CHS') {
+      const ro = postOD / 2, ri = ro - postT;
+      postIx = Math.PI * (Math.pow(ro,4) - Math.pow(ri,4)) / 4;
+      postZx = postIx / ro;
+      postAg = Math.PI * (ro*ro - ri*ri);
+    } else if (postType === 'SHS') {
+      const B = postOD;
+      postIx = (Math.pow(B,4) - Math.pow(B-2*postT,4)) / 12;
+      postZx = postIx / (B/2);
+      postAg = B*B - Math.pow(B-2*postT, 2);
+    } else {
+      postZx = postOD * postOD * postT / 6;
+      postAg = 2 * postOD * postT;
+      postIx = postZx * (postOD/2);
+    }
+    const phi_steel = 0.9;
+    Mpost_cap  = phi_steel * steelFy * postZx * 1e-6;  // N·m
+    Mpost_util = Mpost / Mpost_cap;
+
+    // ULS post uplift/compression including snow (rack)
+    const G_panel_per_post = (panelMass * cols * 9.81) / nPosts;       // N
+    const G_frame_per_post = (frameSW * panelArea * cols * 9.81) / nPosts; // N
+    const S_per_post       = Fsnow_total / nPosts;                     // N
+    F_per_post_uplift_design = 1.35 * F_per_post_uplift / 1000
+                               - 0.9 * (G_panel_per_post + G_frame_per_post + S_per_post) / 1000; // kN
+    F_per_post_comp_design   = 1.35 * F_per_post_comp / 1000
+                               + 1.2 * S_per_post / 1000;               // kN
+
+    // ── B. RAIL BENDING CHECK ────────────────────────────────────────────────
+    // Use shape factors from AS/NZS 1170.2 Table 5.3(A) for inclined surface
+    const C_suction  = 1.30;  // upper surface suction (uplift critical)
+    const C_pressure = 0.70;  // windward pressure
+    const tribHeight_rail = panelH_m / nRails;
+    const w_rail_up_rack  = C_suction  * qdes * tribHeight_rail;   // N/m (suction controls)
+    const w_rail_dn_rack  = C_pressure * qdes * tribHeight_rail;   // N/m (pressure)
+    const w_snow_rail     = p_snow_normal * tribHeight_rail;       // N/m
+    // Combined ULS: max of suction alone or pressure+snow
+    w_rail = Math.max(w_rail_up_rack, w_rail_dn_rack + w_snow_rail);
+
+    Cm = railCond === 'ss' ? 1/8 : railCond === 'fixed' ? 1/12 : 1/2;
+    Mrail = w_rail * railSpan * railSpan * Cm;  // N·m
+    const phi_al = 0.90;
+    Mrail_cap  = phi_al * railF0 * railZx * 1e-6;  // N·m
+    Mrail_util = Mrail / Mrail_cap;
+
+    const E_al = 69500;
+    const estY  = Math.sqrt(railZx / Math.max(railAreaMM2, 1)) * 3;
+    const Irail_est = railZx * estY;
+    const w_sls = w_rail * 0.6;
+    delta_allow = railSpan * 1000 / 200;
+    delta_mid = railCond === 'ss'
+      ? (5 * (w_sls/1000) * Math.pow(railSpan*1000, 4)) / (384 * E_al * Irail_est)
+      : ((w_sls/1000) * Math.pow(railSpan*1000, 4)) / (384 * E_al * Irail_est);
+
+  } else {
+    // ── SINGLE POLE CALCULATION (per XMLP sheet, AS/NZS 1170.2-2021) ─────────
+    const poleAtotal = poleModules * panelW * panelH_m;           // m² total panel area
+    const poleAh     = poleAtotal * Math.cos(tiltRad);            // horizontal projected area
+
+    // Normal forces on panel surface (qdes from upstream wind calc)
+    const pole_Fnorm_up   = Math.abs(poleCfigUp) * qdes * poleAtotal;   // N uplift
+    const pole_Fnorm_dn   = poleCfigDown          * qdes * poleAtotal;   // N downward
+    pole_Fvert_uplift  = pole_Fnorm_up * Math.cos(tiltRad);              // N vertical up
+    pole_Fvert_press   = pole_Fnorm_dn * Math.cos(tiltRad);              // N vertical down
+    pole_Fhoriz        = pole_Fnorm_dn * Math.sin(tiltRad);              // N horizontal shear at grade
+    pole_Mot           = pole_Fhoriz * poleHeightCent;                   // N·m characteristic moment at grade
+
+    // Self-weight and snow
+    const pole_totalMass = poleModules * poleModMass + poleSupportMass;  // kg
+    pole_G_kN = pole_totalMass * 9.81 / 1000;                            // kN
+    const pole_Fsnow = sg * poleAh * Cs_snow / 1000;                    // kN
+
+    // ULS combinations
+    pole_Fpull_design  = 1.35 * pole_Fvert_uplift / 1000
+                         - 0.9 * (pole_G_kN + pole_Fsnow);              // kN
+    pole_Fcomp_design  = 1.35 * pole_Fvert_press / 1000
+                         + 1.2 * (pole_G_kN + pole_Fsnow);              // kN
+
+    // Pole bending check at grade level (cantilever, CHS, AS 4100)
+    const pro = poleOD / 2, pri = pro - poleT;
+    const poleIx = Math.PI * (Math.pow(pro,4) - Math.pow(pri,4)) / 4;
+    poleZx = poleIx / pro;                                                // mm³
+    const phi_pole = 0.9;
+    // fy [N/mm²] × Zx [mm³] = [N·mm]; × 1e-6 → [kN·m]
+    pole_Mcap  = phi_pole * poleSteelFy * poleZx * 1e-6;                // kN·m
+    // ULS shear at grade must be assigned before it is used below
+    pole_Vuls      = 1.35 * pole_Fhoriz / 1000;                         // kN
+    pole_Muls_base = pole_Vuls * poleHeightCent;                         // kN·m
+    pole_Mutil     = pole_Muls_base / pole_Mcap;
+
+    // For anchor check: use pole pull-out force
+    F_per_post_uplift_design = pole_Fpull_design;
+  }
+
+  // ── C. ANCHOR BOLT CHECK ──────────────────────────────────────────────────
+  const anchorGrade = val('anchor-grade');
+  const anchorFu = anchorGrade === '4.6' ? 400 : anchorGrade === 'ss316' ? 480 : 800;
+  const anchorArea = Math.PI * Math.pow(anchorDia * 0.9 / 2, 2);
+  const phi_t = 0.8;
+  const foundType = val('found-type') || 'concrete-pad';
+  const anchorNBolts = (foundType === 'ground-screw' && structType === 'singlepole') ? 2 : 1;
+  const Ntu = anchorNBolts * phi_t * anchorFu * anchorArea / 1000;  // kN (total for group)
+  // Use design uplift force (kN) for anchor check
+  const anchor_util = Math.max(0, F_per_post_uplift_design) / Ntu;
+
+  // NZS 3604 wind zone check
+  const nzsSpeed = NZS_ZONES[nzsZone] || 44;
+  const q_nzs = 0.5 * 1.2 * nzsSpeed * nzsSpeed;
+  const F_uplift_nzs = Math.abs(CpUp) * q_nzs * panelArea; // N per panel
+
+  // Classify result colour
+  const warnLevel = Vdes > 55 ? 'high' : Vdes > 44 ? 'med' : 'low';
+
+  // ======================================================
+  // DISPLAY RESULTS
+  // ======================================================
+  document.getElementById('results-placeholder').style.display = 'none';
+  document.getElementById('results-content').style.display = 'block';
+
+  // Hero boxes
+  const hero = document.getElementById('result-hero');
+  hero.innerHTML = `
+    <div class="result-box ${warnLevel}">
+      <div class="label">Design Wind Speed</div>
+      <div class="value">${Vdes.toFixed(1)}</div>
+      <div class="sub">m/s (ULS, R=${R} yr)</div>
+    </div>
+    <div class="result-box info">
+      <div class="label">Design Pressure (qdes)</div>
+      <div class="value">${(qdes/1000).toFixed(2)}</div>
+      <div class="sub">kPa</div>
+    </div>
+    <div class="result-box ${Math.abs(F_uplift_total) > 20000 ? 'high' : 'med'}">
+      <div class="label">Total Uplift Force</div>
+      <div class="value">${(F_uplift_total/1000).toFixed(1)}</div>
+      <div class="sub">kN (whole array)</div>
+    </div>
+    <div class="result-box info">
+      <div class="label">Uplift / Panel</div>
+      <div class="value">${(F_uplift_panel/1000).toFixed(2)}</div>
+      <div class="sub">kN per panel</div>
+    </div>
+    <div class="result-box info">
+      <div class="label">Drag Force (Total)</div>
+      <div class="value">${(F_drag_total/1000).toFixed(1)}</div>
+      <div class="sub">kN horizontal</div>
+    </div>
+    ${structType === 'rack' ? `
+    <div class="result-box ${F_per_post_uplift_design > 9 ? 'high' : F_per_post_uplift_design > 6 ? 'med' : 'low'}">
+      <div class="label">ULS Uplift / Post</div>
+      <div class="value">${F_per_post_uplift_design.toFixed(1)}</div>
+      <div class="sub">kN per ground screw</div>
+    </div>` : `
+    <div class="result-box ${pole_Fpull_design > 10 ? 'high' : pole_Fpull_design > 6 ? 'med' : 'low'}">
+      <div class="label">ULS Pull-out Force</div>
+      <div class="value">${pole_Fpull_design.toFixed(1)}</div>
+      <div class="sub">kN (pole uplift)</div>
+    </div>`}
+  `;
+
+  // Speed table
+  document.getElementById('speed-table').innerHTML = `
+    <tr><th>Parameter</th><th>Symbol</th><th>Value</th><th>Unit</th></tr>
+    <tr><td>Wind Region</td><td>—</td><td>${region}</td><td>—</td></tr>
+    <tr><td>Return Period</td><td>R</td><td>${R}</td><td>years</td></tr>
+    <tr><td>Regional Wind Speed</td><td>V<sub>R</sub></td><td>${VR.toFixed(1)}</td><td>m/s</td></tr>
+    <tr><td>Climate Change Multiplier</td><td>M<sub>c</sub></td><td>${Mc.toFixed(2)}</td><td>—</td></tr>
+    <tr><td>Terrain/Height Multiplier</td><td>M<sub>z,cat</sub></td><td>${Mzcat.toFixed(3)}</td><td>—</td></tr>
+    <tr><td>Topographic Multiplier</td><td>M<sub>t</sub></td><td>${Mt.toFixed(2)}</td><td>—</td></tr>
+    <tr><td>Shielding Multiplier</td><td>M<sub>s</sub></td><td>${Ms.toFixed(2)}</td><td>—</td></tr>
+    <tr><td>Lee Zone Factor</td><td>M<sub>lee</sub></td><td>${MleeSpeed.toFixed(2)}</td><td>—</td></tr>
+    <tr><td>Reference Height (centroid)</td><td>z</td><td>${heightRef.toFixed(2)}</td><td>m</td></tr>
+    <tr class="section"><td colspan="4">Critical Direction: ${critDir.dir} | M<sub>d</sub> = ${critDir.Md.toFixed(2)}</td></tr>
+    <tr><td><strong>Design Site Wind Speed</strong></td><td><strong>V<sub>des</sub></strong></td><td><strong>${Vdes.toFixed(2)}</strong></td><td><strong>m/s</strong></td></tr>
+    <tr><td>Air Density (altitude corrected)</td><td>ρ</td><td>${rho.toFixed(3)}</td><td>kg/m³</td></tr>
+  `;
+
+  // NZS wind zone highlight
+  ['L','M','H','VH','EH'].forEach(z => {
+    document.getElementById('wz-'+z).classList.remove('active');
+  });
+  document.getElementById('wz-'+nzsZone).classList.add('active');
+  document.getElementById('zone-description').innerHTML = `
+    <strong>NZS 3604 Zone: ${nzsZone === 'VH' ? 'Very High' : nzsZone === 'EH' ? 'Extra High' : {'L':'Low','M':'Medium','H':'High'}[nzsZone] || nzsZone}</strong>
+    — ULS speed = ${nzsSpeed} m/s<br>
+    AS/NZS 1170.2 design speed = <strong>${Vdes.toFixed(1)} m/s</strong>
+    ${Vdes > nzsSpeed ? `<span style="color:var(--red)">(⚠ engineering calc EXCEEDS NZS zone speed — use AS/NZS 1170.2 value)</span>` :
+      `<span style="color:var(--green)">(✓ engineering calc within NZS zone speed)</span>`}
+    <br><a href="https://experience.arcgis.com/experience/6e83b0bb19d14a0db411aebdc301cf49" target="_blank" style="font-size:12px;">→ Verify wind zone at BRANZ Maps</a>
+  `;
+
+  // Pressure table
+  document.getElementById('pressure-table').innerHTML = `
+    <tr><th>Pressure / Coefficient</th><th>Value</th><th>Unit</th></tr>
+    <tr><td>Panel Tilt Angle</td><td>${tilt.toFixed(1)}°</td><td>—</td></tr>
+    <tr><td>Net Cp (Uplift)</td><td>${CpUp.toFixed(2)}</td><td>—</td></tr>
+    <tr><td>Net Cp (Downforce)</td><td>${CpDn.toFixed(2)}</td><td>—</td></tr>
+    <tr><td>Dynamic Pressure q<sub>des</sub></td><td>${qdes.toFixed(0)}</td><td>Pa</td></tr>
+    <tr><td>Net Wind Pressure (Uplift)</td><td>${(Math.abs(CpUp)*qdes).toFixed(0)}</td><td>Pa</td></tr>
+    <tr><td>Net Wind Pressure (Downforce)</td><td>${(CpDn*qdes).toFixed(0)}</td><td>Pa</td></tr>
+    <tr><td>Equiv. NZS 3604 pressure (${nzsZone})</td><td>${(Math.abs(CpUp)*q_nzs).toFixed(0)}</td><td>Pa</td></tr>
+  `;
+
+  // Forces table
+  document.getElementById('forces-table').innerHTML = `
+    <tr><th>Force</th><th>Per Panel</th><th>Per Row</th><th>Total Array</th><th>Unit</th></tr>
+    <tr class="section"><td colspan="5">Array: ${cols} panels × ${rows} rows | Panel ${panelW}m × ${panelH_m}m | Tilt ${tilt}° | Azimuth ${azimuth}°</td></tr>
+    <tr>
+      <td>Panel Face Area</td>
+      <td class="num">${panelArea.toFixed(2)}</td>
+      <td class="num">${(panelArea*cols).toFixed(2)}</td>
+      <td class="num">${totalArea.toFixed(2)}</td>
+      <td>m²</td>
+    </tr>
+    <tr>
+      <td>Wind Uplift Force (ULS)</td>
+      <td class="num">${(F_uplift_panel/1000).toFixed(2)}</td>
+      <td class="num">${(F_uplift_row/1000).toFixed(2)}</td>
+      <td class="num">${(F_uplift_total/1000).toFixed(2)}</td>
+      <td>kN</td>
+    </tr>
+    <tr>
+      <td>Wind Downforce (ULS)</td>
+      <td class="num">${(F_down_panel/1000).toFixed(2)}</td>
+      <td class="num">${(F_down_row/1000).toFixed(2)}</td>
+      <td class="num">${(F_down_total/1000).toFixed(2)}</td>
+      <td>kN</td>
+    </tr>
+    <tr>
+      <td>Self Weight (panels + frame)</td>
+      <td class="num">—</td>
+      <td class="num">${(totalSW_row/1000).toFixed(2)}</td>
+      <td class="num">${(totalSW_row*rows/1000).toFixed(2)}</td>
+      <td>kN</td>
+    </tr>
+    <tr>
+      <td>Net Vertical Force (uplift − SW)</td>
+      <td class="num">—</td>
+      <td class="num">${((F_uplift_row - totalSW_row)/1000).toFixed(2)}</td>
+      <td class="num">${((F_uplift_total - totalSW_row*rows)/1000).toFixed(2)}</td>
+      <td>kN</td>
+    </tr>
+    <tr class="section"><td colspan="5">Horizontal Forces</td></tr>
+    <tr>
+      <td>Drag Force (horizontal, ULS)</td>
+      <td class="num">—</td>
+      <td class="num">${(F_drag_total/rows/1000).toFixed(2)}</td>
+      <td class="num">${(F_drag_total/1000).toFixed(2)}</td>
+      <td>kN</td>
+    </tr>
+    <tr>
+      <td>Overturning Moment (per row)</td>
+      <td class="num">—</td>
+      <td class="num">${(M_overturn_row/1000).toFixed(2)}</td>
+      <td class="num">—</td>
+      <td>kN·m</td>
+    </tr>
+  `;
+
+  // ── Show/hide correct result cards ───────────────────────────────────────
+  document.getElementById('results-rack').style.display        = structType === 'rack'       ? '' : 'none';
+  document.getElementById('results-singlepole').style.display  = structType === 'singlepole' ? '' : 'none';
+
+  if (structType === 'rack') {
+    // ── RACK: WIND / SNOW / SAP SUMMARY (per XMLP calculation report) ───────
+    const panelA   = panelW * panelH_m;          // m² per module
+    const Qdyn     = qdes / 1000;                 // kPa
+    const refQdyn  = 0.5 * 1.2 * 45 * 45 / 1000; // kPa at reference V=45 m/s
+
+    // Snow pressures — show both fresh and compacted regardless of user selection
+    const sg_fresh   = 100 * 9.81 * snowDepth;   // Pa, fresh snow
+    const sg_compact = 200 * 9.81 * snowDepth;   // Pa, compacted snow (design value)
+    // Slope correction — AS/NZS 1170.3 Table 3.3
+    // PDF uses Cs = max(0, 1 − θ/90) to get 0.60 at 36°; standard gives (60−θ)/45 = 0.533 at 36°.
+    // We use the standard formula; note XMLP report uses the simplified form.
+    const Cs_display = Cs_snow;  // already computed per AS/NZS 1170.3 (60−θ)/45
+    // Snow normal-to-surface pressures (SAP shell element input, no additional cos factor)
+    const p_snow_fresh_sap   = sg_fresh   * Cs_display / 1000;  // kN/m²
+    const p_snow_compact_sap = sg_compact * Cs_display / 1000;  // kN/m²
+    // Force per module
+    const F_wind_uplift_module  = 1.30 * Qdyn * panelA;         // kN, critical suction
+    const F_snow_compact_module = p_snow_compact_sap * panelA;  // kN, compacted snow
+
+    // XMLP SAP reference pull-out forces (at V=45 m/s, TC B, open terrain)
+    const xmlpRef = panelW >= 2.0
+      ? { force: 9.32, panel: '2278×1134' }
+      : { force: 6.70, panel: '1762×1134' };
+    const xmlpScaled = xmlpRef.force * (Qdyn / refQdyn);
+
+    // ── A. WIND LOAD TABLE ───────────────────────────────────────────────────
+    document.getElementById('rack-wind-table').innerHTML = `
+      <tr><th>Parameter</th><th>Value</th><th>Unit</th></tr>
+      <tr class="section"><td colspan="3">2.1 Basic Wind Dynamic Pressure | ρ = 1.2 kg/m³</td></tr>
+      <tr><td>q<sub>des</sub> = 0.5 × ρ × V<sub>des</sub>² = 0.5 × 1.2 × ${Vdes.toFixed(1)}²</td>
+        <td class="num">${qdes.toFixed(0)} N/m² = ${Qdyn.toFixed(3)} kN/m²</td><td>kPa</td></tr>
+      <tr class="section"><td colspan="3">2.2 Shape Factors — AS/NZS 1170.2 Table 5.3(A) | θ = ${tilt}° inclined surface</td></tr>
+      <tr><th>Load Case</th><th>Shape Factor C</th><th>Pressure (kN/m²)</th></tr>
+      <tr><td>Windward pressure (inward)</td><td class="num">+0.70</td><td class="num">+${(0.70 * Qdyn).toFixed(3)}</td></tr>
+      <tr><td>Upper surface suction — uplift <strong>(critical)</strong></td><td class="num">−1.30</td><td class="num">−${(1.30 * Qdyn).toFixed(3)}</td></tr>
+      <tr><td>Leeward negative pressure (suction)</td><td class="num">−0.50</td><td class="num">−${(0.50 * Qdyn).toFixed(3)}</td></tr>
+      <tr class="section"><td colspan="3">2.3 Total Wind Force per Module | A<sub>module</sub> = ${panelW.toFixed(3)} × ${panelH_m.toFixed(3)} = ${panelA.toFixed(4)} m²</td></tr>
+      <tr><td>Max uplift force = |C| × q × A = 1.30 × ${Qdyn.toFixed(3)} × ${panelA.toFixed(3)}</td>
+        <td class="num" style="font-weight:700;color:var(--amber)">${F_wind_uplift_module.toFixed(3)}</td><td>kN/module ↑</td></tr>
+    `;
+
+    // ── B. SNOW LOAD TABLE ───────────────────────────────────────────────────
+    document.getElementById('rack-snow-table').innerHTML = snowDepth > 0 ? `
+      <tr><th>Parameter</th><th>Value</th><th>Unit</th></tr>
+      <tr class="section"><td colspan="3">3.1 Basic Snow Pressure (Uncorrected) | Depth h = ${(snowDepth*1000).toFixed(0)} mm</td></tr>
+      <tr><td>Fresh snow: s<sub>01</sub> = 100 × 9.81 × ${snowDepth.toFixed(3)}</td>
+        <td class="num">${sg_fresh.toFixed(1)} N/m² = ${(sg_fresh/1000).toFixed(4)} kN/m²</td><td>kN/m²</td></tr>
+      <tr><td>Compacted snow (design): s<sub>02</sub> = 200 × 9.81 × ${snowDepth.toFixed(3)}</td>
+        <td class="num">${sg_compact.toFixed(1)} N/m² = ${(sg_compact/1000).toFixed(4)} kN/m²</td><td>kN/m²</td></tr>
+      <tr class="section"><td colspan="3">3.2 Slope Correction — AS/NZS 1170.3 | θ = ${tilt}°</td></tr>
+      <tr><td>C<sub>s</sub> = (60 − θ) / 45 for 15° &lt; θ ≤ 60°</td><td class="num">${Cs_display.toFixed(3)}</td><td>—</td></tr>
+      <tr class="section"><td colspan="3">3.3 Slope-Corrected Pressures (normal to surface, SAP input)</td></tr>
+      <tr><td>Fresh: s<sub>01</sub> × C<sub>s</sub></td><td class="num">+${(p_snow_fresh_sap).toFixed(4)}</td><td>kN/m² inward ↓</td></tr>
+      <tr><td>Compacted (design): s<sub>02</sub> × C<sub>s</sub></td>
+        <td class="num" style="font-weight:700">+${p_snow_compact_sap.toFixed(4)}</td><td>kN/m² inward ↓</td></tr>
+      <tr class="section"><td colspan="3">3.4 Total Snow Force per Module</td></tr>
+      <tr><td>F<sub>snow</sub> = s<sub>02,corrected</sub> × A<sub>module</sub> = ${p_snow_compact_sap.toFixed(4)} × ${panelA.toFixed(3)}</td>
+        <td class="num" style="font-weight:700">${F_snow_compact_module.toFixed(3)}</td><td>kN/module ↓</td></tr>
+    ` : `
+      <tr><td colspan="3" style="padding:16px;color:#888;text-align:center;">
+        No snow load entered (depth = 0 mm).<br>Enter a snow depth in the Panel Array inputs to include snow.
+      </td></tr>
+    `;
+
+    // ── C. SAP2000 LOAD SUMMARY + POST RESULT ───────────────────────────────
+    document.getElementById('rack-sap-table').innerHTML = `
+      <tr><th colspan="4" style="text-align:left">4. Final Load Values for SAP2000 Modelling</th></tr>
+      <tr><td colspan="4" style="font-size:11px;color:#888;padding:4px 8px;">Load direction: perpendicular to PV module surface. Positive = inward compression; Negative = outward suction/uplift.</td></tr>
+      <tr><th>Load Type</th><th>Load Case</th><th>SAP Input (kN/m²)</th><th>Behaviour</th></tr>
+      <tr><td>Wind</td><td>Windward surface pressure</td><td class="num">+${(0.70 * Qdyn).toFixed(3)}</td><td>Inward compression</td></tr>
+      <tr><td>Wind</td><td><strong>Upper surface suction (controlling)</strong></td><td class="num" style="color:var(--amber);font-weight:700">−${(1.30 * Qdyn).toFixed(3)}</td><td>Outward uplift</td></tr>
+      <tr><td>Wind</td><td>Leeward surface suction</td><td class="num">−${(0.50 * Qdyn).toFixed(3)}</td><td>Outward suction</td></tr>
+      ${snowDepth > 0 ? `
+      <tr><td>Snow</td><td>Corrected fresh snow</td><td class="num">+${p_snow_fresh_sap.toFixed(4)}</td><td>Inward compression</td></tr>
+      <tr><td>Snow</td><td><strong>Corrected compacted snow (design)</strong></td><td class="num" style="font-weight:700">+${p_snow_compact_sap.toFixed(4)}</td><td>Inward compression</td></tr>
+      ` : '<tr><td>Snow</td><td colspan="3" style="color:#888;">No snow load (depth = 0)</td></tr>'}
+      <tr class="section"><td colspan="4">SAP2000 Post Pull-out Reference — XMLP calculation report (V = 45 m/s, TC B, open terrain)</td></tr>
+      <tr><td colspan="2">Panel 2278×1134 — XMLP SAP result @ 45 m/s</td><td class="num">9.32</td><td>kN per post ↑</td></tr>
+      <tr><td colspan="2">Panel 1762×1134 — XMLP SAP result @ 45 m/s</td><td class="num">6.70</td><td>kN per post ↑</td></tr>
+      <tr class="section"><td colspan="2"><strong>Scaled to site V<sub>des</sub> = ${Vdes.toFixed(1)} m/s — ${xmlpRef.panel} panel basis</strong></td>
+        <td class="num" style="font-weight:700;color:${xmlpScaled > xmlpRef.force ? 'var(--amber)' : 'var(--green)'}">
+          ${xmlpScaled.toFixed(2)}</td><td>kN per post ↑</td></tr>
+      <tr><td colspan="4" style="font-size:11px;color:#888;">
+        XMLP SAP values are for specific array configurations. Scale factor = (V<sub>des</sub>/45)² = ${(Qdyn/refQdyn).toFixed(3)}.
+        ULS pull-out from site calculation: <strong>${F_per_post_uplift_design.toFixed(2)} kN</strong>
+        (1.35·W − 0.9(G+S), ${nPosts} posts per row, ${cols}×${rows} array).
+        Use whichever governs for ground screw specification.
+      </td></tr>
+    `;
+  }
+
+  if (structType === 'singlepole') {
+    // ── A. SINGLE POLE FORCES TABLE ────────────────────────────────────────
+    const poleAtotal = poleModules * panelW * panelH_m;
+    document.getElementById('pole-forces-table').innerHTML = `
+      <tr><th>Force Component</th><th>Characteristic</th><th>ULS Design</th><th>Unit</th></tr>
+      <tr class="section"><td colspan="4">Wind Loads (normal to surface) | C<sub>fig</sub> up=${poleCfigUp} / dn=+${poleCfigDown} | q<sub>des</sub>=${qdes.toFixed(0)} Pa | A<sub>total</sub>=${poleAtotal.toFixed(3)} m²</td></tr>
+      <tr><td>Normal force — uplift</td><td class="num">${(Math.abs(poleCfigUp)*qdes*poleAtotal/1000).toFixed(2)} kN</td><td>—</td><td>kN</td></tr>
+      <tr><td>Normal force — downward</td><td class="num">${(poleCfigDown*qdes*poleAtotal/1000).toFixed(2)} kN</td><td>—</td><td>kN</td></tr>
+      <tr><td>Vertical uplift F<sub>v,up</sub> = F<sub>n,up</sub>·cos θ</td><td class="num">${(pole_Fvert_uplift/1000).toFixed(2)}</td><td>—</td><td>kN</td></tr>
+      <tr><td>Vertical downward F<sub>v,dn</sub> = F<sub>n,dn</sub>·cos θ</td><td class="num">${(pole_Fvert_press/1000).toFixed(2)}</td><td>—</td><td>kN</td></tr>
+      <tr><td>Horizontal shear F<sub>h</sub> = F<sub>n,dn</sub>·sin θ</td><td class="num">${(pole_Fhoriz/1000).toFixed(2)}</td><td>—</td><td>kN</td></tr>
+      <tr class="section"><td colspan="4">Self-weight G = ${pole_G_kN.toFixed(2)} kN | Snow S = ${(sg*(poleModules*panelW*panelH_m*Math.cos(tiltRad))*Cs_snow/1000).toFixed(2)} kN | Cs = ${Cs_snow.toFixed(2)}</td></tr>
+      <tr><td><strong>ULS Pull-out (1.35·F<sub>v,up</sub> − 0.9·(G+S))</strong></td><td>—</td>
+        <td class="num" style="color:${pole_Fpull_design > 5 ? 'var(--red)' : pole_Fpull_design > 3 ? 'var(--amber)' : 'var(--green)'};font-weight:700">${pole_Fpull_design.toFixed(2)}</td><td>kN ↑</td></tr>
+      <tr><td><strong>ULS Compression (1.35·F<sub>v,dn</sub> + 1.2·(G+S))</strong></td><td>—</td>
+        <td class="num" style="font-weight:700">${pole_Fcomp_design.toFixed(2)}</td><td>kN ↓</td></tr>
+      <tr><td>Moment at grade M<sub>char</sub> = F<sub>h</sub>·h</td><td class="num">${(pole_Mot/1000).toFixed(2)} kN·m</td><td>—</td><td>kN·m</td></tr>
+      <tr><td colspan="4" style="font-size:11px;color:#888;">Ref: XMLP calc sheet AS/NZS 1170.2-2021. Compare: standalone 6.92 kN, internal 4.79 kN (at V=45 m/s TC2).</td></tr>
+    `;
+
+    // ── B. SINGLE POLE BENDING TABLE ───────────────────────────────────────
+    document.getElementById('pole-bending-table').innerHTML = `
+      <tr><th>Parameter</th><th>Value</th><th>Unit</th></tr>
+      <tr class="section"><td colspan="3">Geometry | φ89 CHS drops into φ114 ground screw | Embedment ${poleEmbedDepth} mm | Exposed height to array centroid ${poleHeightCent.toFixed(2)} m</td></tr>
+      <tr><td>Height above grade to array centroid (moment arm)</td><td class="num">${poleHeightCent.toFixed(2)}</td><td>m</td></tr>
+      <tr><td>Embedment depth inside ground screw</td><td class="num">${poleEmbedDepth}</td><td>mm</td></tr>
+      <tr class="section"><td colspan="3">Lateral load at grade | φ89 CHS fixed at top of φ114 ground screw</td></tr>
+      <tr><td>Characteristic horizontal shear F<sub>h</sub> = F<sub>n,dn</sub>·sin θ</td><td class="num">${(pole_Fhoriz/1000).toFixed(2)}</td><td>kN</td></tr>
+      <tr><td><strong>ULS lateral load at grade V* = 1.35·F<sub>h</sub></strong></td><td class="num" style="font-weight:700">${(pole_Vuls||0).toFixed(2)}</td><td>kN</td></tr>
+      <tr class="section"><td colspan="3">Section check — φ89×${poleT}mm CHS | fy = ${poleSteelFy} MPa | AS 4100:2020</td></tr>
+      <tr><td>Z<sub>x</sub> = I<sub>x</sub> / r<sub>o</sub></td><td class="num">${(poleZx/1000).toFixed(2)}</td><td>×10³ mm³</td></tr>
+      <tr><td>Characteristic moment M<sub>char</sub> = F<sub>h</sub>·h</td><td class="num">${(pole_Mot/1000).toFixed(3)}</td><td>kN·m</td></tr>
+      <tr><td><strong>ULS design moment M* = V*·h = 1.35·F<sub>h</sub>·h</strong></td><td class="num" style="font-weight:700">${(pole_Muls_base||0).toFixed(3)}</td><td>kN·m</td></tr>
+      <tr><td>Section capacity φM<sub>sx</sub> = 0.9·f<sub>y</sub>·Z<sub>x</sub></td><td class="num">${(pole_Mcap||0).toFixed(3)}</td><td>kN·m</td></tr>
+      <tr class="section"><td>Pole section utilisation M*/φM<sub>sx</sub></td>
+        <td class="num" style="color:${pole_Mutil > 1 ? 'var(--red)' : pole_Mutil > 0.8 ? 'var(--amber)' : 'var(--green)'};font-weight:700">
+          ${(pole_Mutil*100).toFixed(0)}% ${pole_Mutil > 1 ? '✗ FAIL' : '✓ OK'}
+        </td><td>—</td>
+      </tr>
+      <tr><td colspan="3" style="font-size:11px;color:#888;">Critical section is at grade (top of ground screw). Bending from horizontal wind only — axial load and combined check (AS 4100 Cl 8.4) should also be verified for final design.</td></tr>
+      <tr class="section"><td colspan="3">Pole-to-Ground Screw: 2 × M12 Grade ${poleBoltGrade} Bolts | AS 4100 Cl 9.3.2.1 | Single shear, threads in shear plane</td></tr>
+      <tr><td>M12 tensile stress area A<sub>s</sub></td><td class="num">84.3</td><td>mm²</td></tr>
+      <tr><td>f<sub>uf</sub></td><td class="num">${poleBoltFuf}</td><td>MPa</td></tr>
+      <tr><td>φV<sub>f</sub> per bolt = 0.8 × 0.62 × f<sub>uf</sub> × A<sub>s</sub></td><td class="num">${pole_phi_Vf_per.toFixed(1)}</td><td>kN</td></tr>
+      <tr><td>Total shear capacity (2 bolts)</td><td class="num">${pole_phi_Vf_2.toFixed(1)}</td><td>kN</td></tr>
+      <tr><td>ULS shear demand V* = 1.35 × F<sub>h</sub></td><td class="num">${(pole_Vuls||0).toFixed(2)}</td><td>kN</td></tr>
+      <tr class="section"><td>Bolt shear utilisation</td>
+        <td class="num" style="color:${(pole_Vuls||0)/pole_phi_Vf_2 > 1 ? 'var(--red)' : (pole_Vuls||0)/pole_phi_Vf_2 > 0.8 ? 'var(--amber)' : 'var(--green)'};font-weight:700">
+          ${((pole_Vuls||0)/pole_phi_Vf_2*100).toFixed(0)}% ${(pole_Vuls||0)/pole_phi_Vf_2 > 1 ? '✗ FAIL' : '✓ OK'}
+        </td><td>—</td>
+      </tr>
+      <tr><td colspan="3" style="font-size:11px;color:#888;">Shear check only. Also verify: tension from overturning moment, combined shear+tension (AS 4100 Cl 9.3.2.3), bolt spacing, and edge distances on ground screw head plate.</td></tr>
+    `;
+  }
+
+  // ── C. ANCHOR TABLE ──────────────────────────────────────────────────────
+  const upliftDemand = structType === 'singlepole' ? pole_Fpull_design : F_per_post_uplift_design;
+  document.getElementById('anchor-table').innerHTML = `
+    <tr><th>Parameter</th><th>Value</th><th>Unit</th></tr>
+    <tr><td>${anchorNBolts > 1 ? anchorNBolts + ' ×' : ''} Anchor Bolt φ${anchorDia} mm | Grade ${val('anchor-grade')}</td><td class="num">A<sub>s</sub> = ${anchorArea.toFixed(0)} mm²${anchorNBolts > 1 ? ' per bolt' : ''}</td><td>—</td></tr>
+    <tr><td>Bolt f<sub>u</sub></td><td class="num">${anchorFu}</td><td>MPa</td></tr>
+    <tr><td>Design capacity φN<sub>tu</sub> = ${anchorNBolts > 1 ? anchorNBolts + ' × ' : ''}0.8·f<sub>u</sub>·A<sub>s</sub></td><td class="num">${Ntu.toFixed(1)}</td><td>kN</td></tr>
+    <tr><td>ULS Uplift demand (per post/pole)</td><td class="num">${Math.max(0, upliftDemand).toFixed(2)}</td><td>kN</td></tr>
+    ${upliftDemand <= 0 ? '<tr><td colspan="3" style="color:var(--green)">✓ Net uplift ≤ 0 (gravity exceeds wind uplift at this wind speed)</td></tr>' : ''}
+    <tr class="section"><td>Bolt utilisation</td>
+      <td class="num" style="color:${anchor_util > 1 ? 'var(--red)' : anchor_util > 0.8 ? 'var(--amber)' : 'var(--green)'};font-weight:700">
+        ${(anchor_util*100).toFixed(0)}% ${anchor_util > 1 ? '✗ FAIL' : '✓ OK'}
+      </td><td>—</td>
+    </tr>
+    <tr><td>Foundation Type</td><td>${val('found-type')}</td><td>—</td></tr>
+    <tr><td colspan="3" style="font-size:11px;color:#888;">Single bolt tension capacity only. Also verify: pull-out from soil/concrete, group bolt action, shear + tension interaction, and corrosion protection.</td></tr>
+  `;
+
+  // ── WARNINGS ─────────────────────────────────────────────────────────────
+  const warnings = [];
+  if (Vdes > nzsSpeed) warnings.push(`<div class="warn">⚠ AS/NZS 1170.2 design speed (${Vdes.toFixed(1)} m/s) exceeds NZS 3604 zone speed (${nzsSpeed} m/s). Use the higher value.</div>`);
+  if (tilt < 5 && tilt > 0) warnings.push(`<div class="warn">⚠ Very low tilt (${tilt}°). Edge uplift Cfig may exceed tabulated values — consider Cfig = −2.0 for edge panels.</div>`);
+  if (structType === 'rack') {
+    if (F_per_post_uplift_design > 9.32) warnings.push(`<div class="warn">⚠ ULS pull-out (${F_per_post_uplift_design.toFixed(2)} kN) exceeds XMLP SAP reference (9.32 kN at 45 m/s, TC B). Verify ground screw capacity with supplier for this wind speed.</div>`);
+  } else {
+    if (pole_Mutil > 1) warnings.push(`<div class="warn">✗ Pole overstressed in bending (${(pole_Mutil*100).toFixed(0)}%). Increase OD, wall thickness, or reduce centroid height.</div>`);
+    if (pole_Fpull_design > 7) warnings.push(`<div class="warn">⚠ ULS pull-out force ${pole_Fpull_design.toFixed(1)} kN exceeds XMLP standalone reference (6.92 kN at 45 m/s TC2). Site wind speed is higher — verify foundation accordingly.</div>`);
+  }
+  if (anchor_util > 1) warnings.push(`<div class="warn">✗ Anchor bolt overstressed. Increase diameter, use higher grade, or add bolts.</div>`);
+  if (region === 'NZ3' || region === 'NZ4') warnings.push(`<div class="warn">⚠ High wind region (${region}). CPEng peer review recommended.</div>`);
+  if (leeZone) warnings.push(`<div class="warn">⚠ Lee zone active — significantly higher local wind possible. AS/NZS 1170.2 §4.4 site-specific assessment required.</div>`);
+  if (snowDepth > 0) warnings.push(`<div class="notice">ℹ Snow load included: ${snowDepth*1000} mm depth, ${snowDensity} kg/m³ density, slope factor Cs = ${Cs_snow.toFixed(2)}. Verify ground snow load against NIWA/council data for site.</div>`);
+  if (warnings.length === 0) warnings.push(`<div class="success-msg">✓ All checks passed. Proceed with detailed design by a CPEng.</div>`);
+  document.getElementById('warnings-content').innerHTML = warnings.join('');
+
+  // Build report
+  const condLabel = railCond === 'ss' ? 'Simply supported (wL²/8)'
+                  : railCond === 'fixed' ? 'Fixed-fixed (wL²/12)' : 'Cantilever (wL²/2)';
+  const tribHeight = panelH_m / nRails;
+  buildReport({
+    R, VR, Mc, Mzcat, Mt, Ms, MleeSpeed, Vdes, qdes, region, tc, topo,
+    nzsZone, nzsSpeed, tilt, azimuth, panelW, panelH_m, cols, rows,
+    F_uplift_panel, F_uplift_row, F_uplift_total, F_down_panel, F_down_total,
+    F_drag_total, M_overturn_row, nPosts, F_per_post_uplift, F_per_post_horiz,
+    F_per_post_uplift_design: F_per_post_uplift_design||0,
+    Mpost: Mpost||0, Mpost_cap: Mpost_cap||0, Mpost_util: Mpost_util||0,
+    Mrail: Mrail||0, Mrail_cap: Mrail_cap||0, Mrail_util: Mrail_util||0,
+    railF0, railZx, railSpan, nRails, railAreaMM2,
+    w_rail: w_rail||0, condLabel, tribHeight, Cm: Cm||0,
+    delta_mid: delta_mid||0, delta_allow: delta_allow||0,
+    Ntu, anchor_util, anchorDia, heightRef,
+    rho, CpUp, CpDn, panelArea, totalArea, critDir, MdRow,
+    structType, snowDepth, snowDensity, Cs_snow, Fsnow_total,
+    // single pole specific
+    pole_Fpull_design: pole_Fpull_design||0, pole_Fcomp_design: pole_Fcomp_design||0,
+    pole_Mot: pole_Mot||0, pole_Mutil: pole_Mutil||0,
+    pole_Fhoriz: pole_Fhoriz||0, pole_Fvert_uplift: pole_Fvert_uplift||0,
+    pole_Fvert_press: pole_Fvert_press||0, pole_G_kN: pole_G_kN||0,
+    pole_Vuls: pole_Vuls||0, pole_Muls_base: pole_Muls_base||0,
+    pole_Mcap: pole_Mcap||0, poleZx: poleZx||0,
+    poleOD, poleT, poleHeightCent, poleEmbedDepth, poleSteelFy,
+    poleCfigUp, poleCfigDown, poleModules,
+    pole_phi_Vf_per, pole_phi_Vf_2,
+    poleBoltGrade: val('pole-bolt-grade')||'8.8',
+    poleBoltFuf: (val('pole-bolt-grade')||'8.8') === '4.6' ? 400 : 800,
+    // aliases
+    Zx: postZx||poleZx||0
+  });
+
+  switchTab('results');
+}
+
+function buildReport(d) {
+  const projName = val('proj-name');
+  const projEng = val('proj-eng');
+  const projDate = val('proj-date') || new Date().toLocaleDateString('en-NZ');
+
+  document.getElementById('report-placeholder').style.display = 'none';
+  document.getElementById('report-content').style.display = 'block';
+
+  // ── Derived values (re-computed from passed data to avoid scope issues) ──
+  const Qdyn      = d.qdes / 1000;                       // kPa
+  const panelA    = d.panelW * d.panelH_m;               // m² per module
+  const refQdyn   = 0.5 * 1.2 * 45 * 45 / 1000;         // kPa at V=45 m/s reference
+  const tiltRad   = d.tilt * Math.PI / 180;
+  const xmlpRef   = d.panelW >= 2.0
+    ? { force: 9.32, panel: '2278×1134' }
+    : { force: 6.70, panel: '1762×1134' };
+  const xmlpScaled      = xmlpRef.force * (Qdyn / refQdyn);
+  const sg_fresh        = 100 * 9.81 * d.snowDepth;      // Pa
+  const sg_compact      = 200 * 9.81 * d.snowDepth;      // Pa
+  const p_snow_fresh_sap   = sg_fresh   * d.Cs_snow / 1000;  // kN/m²
+  const p_snow_compact_sap = sg_compact * d.Cs_snow / 1000;  // kN/m²
+  const F_wind_uplift_module  = 1.30 * Qdyn * panelA;        // kN per module
+  const F_snow_compact_module = p_snow_compact_sap * panelA; // kN per module
+  // Per-pole snow (single pole path)
+  const sg_pole  = d.snowDensity * 9.81 * d.snowDepth;   // Pa
+  const pole_Fsnow = sg_pole * (d.poleModules * panelA * Math.cos(tiltRad)) * d.Cs_snow / 1000; // kN
+  const boltUtil = (d.pole_Vuls || 0) / (d.pole_phi_Vf_2 || 1);
+
+  // ── STEP 3 — pressure coefficients (structure-type specific) ──────────────
+  const step3 = d.structType === 'rack' ? `
+    <div class="calc-step">
+      <div class="step-title">STEP 3 — Shape Factors (AS/NZS 1170.2 Table 5.3(A))</div>
+      Panel tilt θ = <strong>${d.tilt}°</strong> | Basis: AS/NZS 1170.2:2021 Table 5.3(A) — Inclined roofs and canopy surfaces<br>
+      Applied as shell element loads in SAP2000 per the XMLP calculation methodology.<br><br>
+      <table class="result-table">
+        <tr><th>Load Case</th><th>Shape Factor C</th><th>Pressure = C × q<sub>des</sub></th></tr>
+        <tr><td>Windward surface pressure (inward)</td><td class="num">+0.70</td><td class="num">+${(0.70*Qdyn).toFixed(3)} kPa</td></tr>
+        <tr><td>Upper surface suction — uplift <strong>(critical)</strong></td><td class="num">−1.30</td><td class="num">−${(1.30*Qdyn).toFixed(3)} kPa</td></tr>
+        <tr><td>Leeward negative pressure (suction)</td><td class="num">−0.50</td><td class="num">−${(0.50*Qdyn).toFixed(3)} kPa</td></tr>
+      </table>
+    </div>` : `
+    <div class="calc-step">
+      <div class="step-title">STEP 3 — Net Pressure Coefficients (C<sub>fig</sub>)</div>
+      Panel tilt α = <strong>${d.tilt}°</strong><br>
+      Basis: AS/NZS 1170.2 Table 5.4 (canopy roofs) + ASCE 7-16 §29.4 (ground-mounted solar) + published wind tunnel research.<br><br>
+      C<sub>fig</sub> (uplift / suction) = <strong>${d.poleCfigUp.toFixed(2)}</strong><br>
+      C<sub>fig</sub> (downforce / pressure) = <strong>+${d.poleCfigDown.toFixed(2)}</strong><br><br>
+      Net uplift pressure = ${Math.abs(d.poleCfigUp).toFixed(2)} × ${d.qdes.toFixed(0)} = <strong>${(Math.abs(d.poleCfigUp)*Qdyn).toFixed(3)} kPa</strong><br>
+      Net downforce pressure = ${d.poleCfigDown.toFixed(2)} × ${d.qdes.toFixed(0)} = <strong>${(d.poleCfigDown*Qdyn).toFixed(3)} kPa</strong>
+    </div>`;
+
+  // ── STEP 4 — Array forces (structure-type specific) ───────────────────────
+  const step4 = d.structType === 'rack' ? `
+    <div class="calc-step">
+      <div class="step-title">STEP 4 — Wind &amp; Snow Forces on Array</div>
+      Array: ${d.cols} panels/row × ${d.rows} rows | Panel ${d.panelW}m × ${d.panelH_m}m | A<sub>module</sub> = ${panelA.toFixed(4)} m²<br>
+      Total array area = ${d.totalArea.toFixed(2)} m²<br><br>
+      <strong>Wind — critical case (upper surface suction, C = −1.30):</strong><br>
+      F<sub>wind,uplift</sub> = 1.30 × ${Qdyn.toFixed(3)} × ${panelA.toFixed(3)} = <span class="result">${F_wind_uplift_module.toFixed(3)} kN / module ↑</span><br><br>
+      ${d.snowDepth > 0 ? `<strong>Snow — compacted design case:</strong><br>
+      F<sub>snow</sub> = ${p_snow_compact_sap.toFixed(4)} × ${panelA.toFixed(3)} = <span class="result">${F_snow_compact_module.toFixed(3)} kN / module ↓</span><br><br>` : '<em>Snow: not applicable (depth = 0)</em><br><br>'}
+      <strong>Per ground screw (${d.nPosts} posts per row @ ${val('post-spacing')} m c/c):</strong><br>
+      ULS pull-out per post = <span class="result" style="color:var(--amber)">${d.F_per_post_uplift_design.toFixed(2)} kN ↑</span>
+    </div>` : `
+    <div class="calc-step">
+      <div class="step-title">STEP 4 — Wind &amp; Snow Forces (Single Pole)</div>
+      ${d.poleModules} modules on pole | Panel ${d.panelW}m × ${d.panelH_m}m | θ = ${d.tilt}° | A<sub>total</sub> = ${(d.poleModules*panelA).toFixed(3)} m²<br><br>
+      <strong>Wind normal forces (to panel surface):</strong><br>
+      F<sub>n,up</sub> = ${Math.abs(d.poleCfigUp).toFixed(2)} × ${d.qdes.toFixed(0)} × ${(d.poleModules*panelA).toFixed(3)} = <strong>${(Math.abs(d.poleCfigUp)*d.qdes*d.poleModules*panelA/1000).toFixed(2)} kN</strong><br>
+      F<sub>n,dn</sub> = ${d.poleCfigDown.toFixed(2)} × ${d.qdes.toFixed(0)} × ${(d.poleModules*panelA).toFixed(3)} = <strong>${(d.poleCfigDown*d.qdes*d.poleModules*panelA/1000).toFixed(2)} kN</strong><br><br>
+      <strong>Resolved forces:</strong><br>
+      Vertical uplift F<sub>v,up</sub> = F<sub>n,up</sub> · cos θ = <span class="result">${(d.pole_Fvert_uplift/1000).toFixed(2)} kN ↑</span><br>
+      Horizontal shear F<sub>h</sub> = F<sub>n,dn</sub> · sin θ = <span class="result">${(d.pole_Fhoriz/1000).toFixed(2)} kN →</span><br>
+      Self-weight G = ${d.pole_G_kN.toFixed(2)} kN | Snow S = ${pole_Fsnow.toFixed(2)} kN (Cs = ${d.Cs_snow.toFixed(2)})
+    </div>`;
+
+  // ── STEP 5 — Structure-specific checks ────────────────────────────────────
+  let step5 = '';
+  if (d.structType === 'rack') {
+    step5 = `
+    <div class="calc-step">
+      <div class="step-title">STEP 5A — Wind Load Calculation (AS/NZS 1170.2 — XMLP SAP2000 Methodology)</div>
+      <table class="result-table">
+        <tr><th>Parameter</th><th>Value</th><th>Unit</th></tr>
+        <tr class="section"><td colspan="3">Dynamic Wind Pressure | ρ = 1.2 kg/m³</td></tr>
+        <tr><td>q<sub>des</sub> = 0.5 × 1.2 × ${d.Vdes.toFixed(1)}²</td>
+          <td class="num">${d.qdes.toFixed(0)} N/m² = ${Qdyn.toFixed(3)} kN/m²</td><td>kPa</td></tr>
+        <tr class="section"><td colspan="3">Shape Factors — AS/NZS 1170.2 Table 5.3(A) | θ = ${d.tilt}°</td></tr>
+        <tr><th>Load Case</th><th>Shape Factor C</th><th>Pressure (kN/m²)</th></tr>
+        <tr><td>Windward pressure (inward)</td><td class="num">+0.70</td><td class="num">+${(0.70*Qdyn).toFixed(3)}</td></tr>
+        <tr><td>Upper surface suction — uplift <strong>(critical)</strong></td><td class="num">−1.30</td><td class="num">−${(1.30*Qdyn).toFixed(3)}</td></tr>
+        <tr><td>Leeward negative pressure (suction)</td><td class="num">−0.50</td><td class="num">−${(0.50*Qdyn).toFixed(3)}</td></tr>
+        <tr class="section"><td colspan="3">Total Wind Force per Module | A<sub>module</sub> = ${panelA.toFixed(4)} m²</td></tr>
+        <tr><td>Max uplift = 1.30 × ${Qdyn.toFixed(3)} × ${panelA.toFixed(3)}</td>
+          <td class="num" style="font-weight:700;color:var(--amber)">${F_wind_uplift_module.toFixed(3)}</td><td>kN / module ↑</td></tr>
+      </table>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-title">STEP 5B — Snow Load Calculation (AS/NZS 1170.3)</div>
+      ${d.snowDepth > 0 ? `
+      Snow depth h = ${(d.snowDepth*1000).toFixed(0)} mm<br><br>
+      <table class="result-table">
+        <tr><th>Parameter</th><th>Value</th><th>Unit</th></tr>
+        <tr class="section"><td colspan="3">Basic Snow Pressures (Uncorrected) | h = ${(d.snowDepth*1000).toFixed(0)} mm</td></tr>
+        <tr><td>Fresh: s<sub>01</sub> = 100 × 9.81 × ${d.snowDepth.toFixed(3)}</td>
+          <td class="num">${sg_fresh.toFixed(1)} N/m² = ${(sg_fresh/1000).toFixed(4)} kN/m²</td><td>kN/m²</td></tr>
+        <tr><td>Compacted (design): s<sub>02</sub> = 200 × 9.81 × ${d.snowDepth.toFixed(3)}</td>
+          <td class="num">${sg_compact.toFixed(1)} N/m² = ${(sg_compact/1000).toFixed(4)} kN/m²</td><td>kN/m²</td></tr>
+        <tr class="section"><td colspan="3">Slope Correction — AS/NZS 1170.3 | θ = ${d.tilt}°</td></tr>
+        <tr><td>C<sub>s</sub> = (60 − θ) / 45</td><td class="num">${d.Cs_snow.toFixed(3)}</td><td>—</td></tr>
+        <tr class="section"><td colspan="3">Corrected Pressures (normal to surface — SAP2000 shell element input)</td></tr>
+        <tr><td>Fresh: s<sub>01</sub> × C<sub>s</sub></td><td class="num">+${p_snow_fresh_sap.toFixed(4)}</td><td>kN/m² inward ↓</td></tr>
+        <tr><td>Compacted (design): s<sub>02</sub> × C<sub>s</sub></td>
+          <td class="num" style="font-weight:700">+${p_snow_compact_sap.toFixed(4)}</td><td>kN/m² inward ↓</td></tr>
+        <tr class="section"><td colspan="3">Total Snow Force per Module</td></tr>
+        <tr><td>F<sub>snow</sub> = ${p_snow_compact_sap.toFixed(4)} × ${panelA.toFixed(3)}</td>
+          <td class="num" style="font-weight:700">${F_snow_compact_module.toFixed(3)}</td><td>kN / module ↓</td></tr>
+      </table>` : '<em>No snow load (depth = 0 mm). If site is snow-prone, enter snow depth on the Site &amp; Inputs tab.</em>'}
+    </div>
+
+    <div class="calc-step">
+      <div class="step-title">STEP 5C — SAP2000 Load Summary &amp; Post Pull-out</div>
+      Method: Pressures applied as SAP2000 shell element loads. Post pull-out extracted from XMLP (Xiamen Landpower) SAP2000 calculation report.<br><br>
+      <table class="result-table">
+        <tr><th>Load Type</th><th>Load Case</th><th>SAP2000 Input (kN/m²)</th><th>Behaviour</th></tr>
+        <tr><td colspan="4" style="font-size:11px;color:#888;padding:4px 8px;">+ = inward (compression); − = outward (suction / uplift)</td></tr>
+        <tr><td>Wind</td><td>Windward surface pressure</td><td class="num">+${(0.70*Qdyn).toFixed(3)}</td><td>Inward compression</td></tr>
+        <tr><td>Wind</td><td><strong>Upper surface suction (controlling)</strong></td>
+          <td class="num" style="color:var(--amber);font-weight:700">−${(1.30*Qdyn).toFixed(3)}</td><td>Outward uplift</td></tr>
+        <tr><td>Wind</td><td>Leeward surface suction</td><td class="num">−${(0.50*Qdyn).toFixed(3)}</td><td>Outward suction</td></tr>
+        ${d.snowDepth > 0 ? `
+        <tr><td>Snow</td><td>Corrected fresh snow</td><td class="num">+${p_snow_fresh_sap.toFixed(4)}</td><td>Inward compression</td></tr>
+        <tr><td>Snow</td><td><strong>Corrected compacted snow (design)</strong></td>
+          <td class="num" style="font-weight:700">+${p_snow_compact_sap.toFixed(4)}</td><td>Inward compression</td></tr>` :
+        '<tr><td>Snow</td><td colspan="3" style="color:#888;">No snow load (depth = 0)</td></tr>'}
+        <tr class="section"><td colspan="4">SAP2000 Post Pull-out Reference — XMLP report (V = 45 m/s, TC B, open terrain)</td></tr>
+        <tr><td colspan="2">Panel 2278×1134 — XMLP SAP result @ 45 m/s</td><td class="num">9.32</td><td>kN per post ↑</td></tr>
+        <tr><td colspan="2">Panel 1762×1134 — XMLP SAP result @ 45 m/s</td><td class="num">6.70</td><td>kN per post ↑</td></tr>
+        <tr class="section"><td colspan="2"><strong>Scaled to site V<sub>des</sub> = ${d.Vdes.toFixed(1)} m/s — ${xmlpRef.panel} panel basis</strong></td>
+          <td class="num" style="font-weight:700;color:${xmlpScaled > xmlpRef.force ? 'var(--amber)' : 'var(--green)'}">
+            ${xmlpScaled.toFixed(2)}</td><td>kN per post ↑</td></tr>
+        <tr><td colspan="2"><strong>ULS pull-out from site wind calculation</strong></td>
+          <td class="num" style="font-weight:700;color:var(--amber)">${d.F_per_post_uplift_design.toFixed(2)}</td><td>kN per post ↑</td></tr>
+        <tr><td colspan="4" style="font-size:11px;color:#888;">
+          Scale factor = (V<sub>des</sub>/45)² = ${(Qdyn/refQdyn).toFixed(3)}.
+          Site calculation: 1.35·W − 0.9·(G+S), ${d.nPosts} posts / row, ${d.cols}×${d.rows} array.
+          Use whichever pull-out governs for ground screw specification.
+        </td></tr>
+      </table>
+    </div>`;
+  } else {
+    // Single Pole path
+    step5 = `
+    <div class="calc-step">
+      <div class="step-title">STEP 5A — Pole Structural Forces</div>
+      φ${d.poleOD}×${d.poleT}mm CHS pole sleeved inside φ114 ground screw | ${d.poleModules} modules | θ = ${d.tilt}°<br>
+      C<sub>fig</sub> (uplift) = ${d.poleCfigUp.toFixed(2)} | C<sub>fig</sub> (downward) = +${d.poleCfigDown.toFixed(2)} | A<sub>total</sub> = ${(d.poleModules*panelA).toFixed(3)} m²<br><br>
+      <table class="result-table">
+        <tr><th>Force Component</th><th>Characteristic</th><th>ULS Design</th><th>Unit</th></tr>
+        <tr class="section"><td colspan="4">Wind Normal Forces | q<sub>des</sub> = ${d.qdes.toFixed(0)} Pa</td></tr>
+        <tr><td>Normal uplift F<sub>n,up</sub> = |C<sub>fig</sub>| × q × A</td>
+          <td class="num">${(Math.abs(d.poleCfigUp)*d.qdes*d.poleModules*panelA/1000).toFixed(2)}</td><td>—</td><td>kN</td></tr>
+        <tr><td>Normal downward F<sub>n,dn</sub> = C<sub>fig</sub> × q × A</td>
+          <td class="num">${(d.poleCfigDown*d.qdes*d.poleModules*panelA/1000).toFixed(2)}</td><td>—</td><td>kN</td></tr>
+        <tr><td>Vertical uplift F<sub>v,up</sub> = F<sub>n,up</sub> · cos θ</td>
+          <td class="num">${(d.pole_Fvert_uplift/1000).toFixed(2)}</td><td>—</td><td>kN</td></tr>
+        <tr><td>Vertical downward F<sub>v,dn</sub> = F<sub>n,dn</sub> · cos θ</td>
+          <td class="num">${(d.pole_Fvert_press/1000).toFixed(2)}</td><td>—</td><td>kN</td></tr>
+        <tr><td>Horizontal shear F<sub>h</sub> = F<sub>n,dn</sub> · sin θ</td>
+          <td class="num">${(d.pole_Fhoriz/1000).toFixed(2)}</td>
+          <td class="num" style="font-weight:700">1.35 × ${(d.pole_Fhoriz/1000).toFixed(2)} = ${(d.pole_Vuls||0).toFixed(2)}</td><td>kN</td></tr>
+        <tr class="section"><td colspan="4">Self-weight &amp; Snow | G = ${d.pole_G_kN.toFixed(2)} kN | S = ${pole_Fsnow.toFixed(2)} kN | C<sub>s</sub> = ${d.Cs_snow.toFixed(2)}</td></tr>
+        <tr><td><strong>ULS pull-out: 1.35·F<sub>v,up</sub> − 0.9·(G+S)</strong></td>
+          <td>—</td>
+          <td class="num" style="font-weight:700;color:var(--amber)">${d.pole_Fpull_design.toFixed(2)}</td><td>kN ↑</td></tr>
+        <tr><td>ULS compression: 1.35·F<sub>v,dn</sub> + 1.2·(G+S)</td>
+          <td>—</td>
+          <td class="num">${d.pole_Fcomp_design.toFixed(2)}</td><td>kN ↓</td></tr>
+      </table>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-title">STEP 5B — Pole Bending Check (AS 4100:2020)</div>
+      Section: φ${d.poleOD}×${d.poleT}mm CHS | f<sub>y</sub> = ${d.poleSteelFy} MPa<br>
+      Geometry: φ89 CHS sleeved inside φ114 ground screw | Embedment depth = ${d.poleEmbedDepth} mm | Height to centroid = ${d.poleHeightCent.toFixed(2)} m<br>
+      Model: Cantilever — lateral load V* at grade, moment arm h to array centroid<br><br>
+      <table class="result-table">
+        <tr><th>Parameter</th><th>Value</th><th>Unit</th></tr>
+        <tr class="section"><td colspan="3">Section Properties — φ${d.poleOD}×${d.poleT}mm CHS</td></tr>
+        <tr><td>Outer radius r<sub>o</sub></td><td class="num">${(d.poleOD/2).toFixed(1)}</td><td>mm</td></tr>
+        <tr><td>Inner radius r<sub>i</sub> = r<sub>o</sub> − t</td><td class="num">${(d.poleOD/2 - d.poleT).toFixed(1)}</td><td>mm</td></tr>
+        <tr><td>I<sub>x</sub> = π(r<sub>o</sub>⁴ − r<sub>i</sub>⁴) / 4</td>
+          <td class="num">${(Math.PI*(Math.pow(d.poleOD/2,4)-Math.pow(d.poleOD/2-d.poleT,4))/4/1000).toFixed(0)}</td><td>×10³ mm⁴</td></tr>
+        <tr><td>Z<sub>x</sub> = I<sub>x</sub> / r<sub>o</sub></td><td class="num">${(d.poleZx/1000).toFixed(2)}</td><td>×10³ mm³</td></tr>
+        <tr class="section"><td colspan="3">Cantilever Bending at Grade</td></tr>
+        <tr><td>Characteristic horizontal shear F<sub>h</sub></td><td class="num">${(d.pole_Fhoriz/1000).toFixed(2)}</td><td>kN</td></tr>
+        <tr><td><strong>ULS lateral load V* = 1.35 × F<sub>h</sub></strong></td>
+          <td class="num" style="font-weight:700">${(d.pole_Vuls||0).toFixed(2)}</td><td>kN</td></tr>
+        <tr><td>Moment arm h (grade to centroid)</td><td class="num">${d.poleHeightCent.toFixed(2)}</td><td>m</td></tr>
+        <tr><td><strong>ULS moment M* = V* × h</strong></td>
+          <td class="num" style="font-weight:700">${(d.pole_Muls_base||0).toFixed(3)}</td><td>kN·m</td></tr>
+        <tr class="section"><td colspan="3">Section Capacity</td></tr>
+        <tr><td>φM<sub>sx</sub> = 0.9 × f<sub>y</sub> × Z<sub>x</sub> = 0.9 × ${d.poleSteelFy} × ${(d.poleZx/1000).toFixed(2)}×10³ mm³</td>
+          <td class="num">${(d.pole_Mcap||0).toFixed(3)}</td><td>kN·m</td></tr>
+        <tr class="section"><td>Utilisation M* / φM<sub>sx</sub></td>
+          <td class="num" style="font-weight:700;color:${(d.pole_Mutil||0)>1?'var(--red)':(d.pole_Mutil||0)>0.8?'var(--amber)':'var(--green)'}">
+            ${((d.pole_Mutil||0)*100).toFixed(0)}% ${(d.pole_Mutil||0)>1?'✗ FAIL':'✓ OK'}</td><td>—</td></tr>
+      </table>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-title">STEP 5C — Connection Check: 2 × M12 Bolts (Pole Flange to Ground Screw Head, AS 4100)</div>
+      Grade ${d.poleBoltGrade} bolts | f<sub>uf</sub> = ${d.poleBoltFuf} MPa | A<sub>s</sub> = 84.3 mm² (M12 tensile stress area) | Single shear<br><br>
+      <table class="result-table">
+        <tr><th>Parameter</th><th>Value</th><th>Unit</th></tr>
+        <tr><td>φV<sub>f</sub> per bolt = 0.8 × 0.62 × ${d.poleBoltFuf} × 84.3 / 1000</td>
+          <td class="num">${(d.pole_phi_Vf_per||0).toFixed(1)}</td><td>kN</td></tr>
+        <tr><td>Total capacity — 2 bolts</td>
+          <td class="num">${(d.pole_phi_Vf_2||0).toFixed(1)}</td><td>kN</td></tr>
+        <tr><td>ULS shear demand V* = 1.35 × F<sub>h</sub></td>
+          <td class="num">${(d.pole_Vuls||0).toFixed(2)}</td><td>kN</td></tr>
+        <tr class="section"><td>Bolt shear utilisation V* / φV<sub>f,total</sub></td>
+          <td class="num" style="font-weight:700;color:${boltUtil>1?'var(--red)':boltUtil>0.8?'var(--amber)':'var(--green)'}">
+            ${(boltUtil*100).toFixed(0)}% ${boltUtil>1?'✗ FAIL':'✓ OK'}</td><td>—</td></tr>
+        <tr><td colspan="3" style="font-size:11px;color:#888;">
+          Threads assumed in shear plane. Also verify bearing capacity of pole flange and ground screw head plate, and shear + tension interaction under combined loading.
+        </td></tr>
+      </table>
+    </div>`;
+  }
+
+  document.getElementById('report-body').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+      <div>
+        <h2 style="color:var(--navy);font-size:18px;margin-bottom:4px;">Structural Wind Load Calculation</h2>
+        <h3 style="color:#555;font-size:13px;font-weight:400;">Ground-Mounted Photovoltaic Array — AS/NZS 1170.2:2021 / NZS 3604:2011</h3>
+      </div>
+      <div style="text-align:right;font-size:12px;color:#555;">
+        <strong>${projName}</strong><br>
+        Engineer: ${projEng}<br>
+        Date: ${projDate}<br>
+        Status: PRELIMINARY — FOR REVIEW
+      </div>
+    </div>
+    <hr class="section-divider">
+
+    <div class="calc-step">
+      <div class="step-title">STEP 1 — Site Wind Speed (AS/NZS 1170.2:2021 Cl. 2.2)</div>
+      <div class="formula">V<sub>sit,β</sub> = V<sub>R</sub> × M<sub>c</sub> × M<sub>d</sub> × max(M<sub>z,cat</sub> × M<sub>s</sub>, M<sub>t</sub>)</div><br>
+      Wind Region: <strong>${val('wind-region')}</strong> | Importance Level: <strong>${val('importance-level')}</strong> | Design Life: <strong>${val('design-life')} years</strong><br>
+      Return Period R = <strong>${d.R} years</strong><br>
+      Regional Wind Speed V<sub>R</sub> = <strong>${d.VR.toFixed(1)} m/s</strong> (Table 3.1(B) AS/NZS 1170.2:2011)<br><br>
+
+      Multipliers:<br>
+      — M<sub>c</sub> (climate change) = <strong>${d.Mc.toFixed(2)}</strong><br>
+      — M<sub>d</sub> (direction, critical) = <strong>${d.critDir.Md.toFixed(2)}</strong> [direction: ${d.critDir.dir}]<br>
+      — M<sub>z,cat</sub> (terrain/height at z = ${d.heightRef.toFixed(2)}m, ${val('terrain-cat')}) = <strong>${d.Mzcat.toFixed(3)}</strong><br>
+      — M<sub>s</sub> (shielding) = <strong>${d.Ms.toFixed(2)}</strong><br>
+      — M<sub>t</sub> (topography, ${val('topo-class')}) = <strong>${d.Mt.toFixed(2)}</strong><br>
+      — M<sub>lee</sub> (lee zone) = <strong>${d.MleeSpeed.toFixed(2)}</strong><br><br>
+      <div class="formula">V<sub>des</sub> = ${d.VR.toFixed(1)} × ${d.Mc.toFixed(2)} × ${d.critDir.Md.toFixed(2)} × max(${d.Mzcat.toFixed(3)} × ${d.Ms.toFixed(2)}, ${d.Mt.toFixed(2)})</div><br>
+      <span class="result">V<sub>des</sub> = ${d.Vdes.toFixed(2)} m/s</span>
+    </div>
+
+    <div class="calc-step">
+      <div class="step-title">STEP 2 — Design Wind Pressure (Cl. 2.4)</div>
+      Air density ρ = 1.2 × exp(−${val('site-altitude')}/8500) = <strong>${d.rho.toFixed(3)} kg/m³</strong><br>
+      <div class="formula">q<sub>des</sub> = ½ × ρ × V²<sub>des</sub> = 0.5 × ${d.rho.toFixed(3)} × ${d.Vdes.toFixed(2)}² = <strong>${d.qdes.toFixed(0)} Pa = ${Qdyn.toFixed(3)} kPa</strong></div>
+    </div>
+
+    ${step3}
+
+    ${step4}
+
+    ${step5}
+
+    <div class="calc-step">
+      <div class="step-title">STEP 6 — NZS 3604 Wind Zone Cross-Check</div>
+      Selected NZS 3604 zone: <strong>${d.nzsZone}</strong> (ULS = ${d.nzsSpeed} m/s)<br>
+      AS/NZS 1170.2 design speed: <strong>${d.Vdes.toFixed(1)} m/s</strong><br>
+      Governing: <strong>${d.Vdes > d.nzsSpeed ? 'AS/NZS 1170.2 governs' : 'NZS 3604 zone governs'}</strong>
+    </div>
+
+    <div style="margin-top:16px;font-size:11px;color:#888;border-top:1px solid #ddd;padding-top:10px;">
+      This calculation was produced using the NZ Solar Wind Load Calculator (AS/NZS 1170.2 / NZS 3604 / BRANZ).
+      Regional wind speed data from AS/NZS 1170.2:2011 — verify against 2021 standard.
+      All results are preliminary and must be reviewed and certified by a registered CPEng before use in any building consent application.
+      ${d.structType === 'rack'
+        ? 'Rack/table array: pressures from AS/NZS 1170.2:2021 Table 5.3(A) applied as SAP2000 shell element loads per XMLP calculation methodology. Post pull-out extracted from XMLP SAP2000 report.'
+        : 'Single pole: pressure coefficients from AS/NZS 1170.2 Table 5.4 / ASCE 7-16 §29.4 / published wind tunnel research. No NZ-specific ground-mounted solar Cp table exists in AS/NZS 1170.2:2021.'}
+    </div>
+  `;
+}
+
+function resetForm() {
+  if (confirm('Reset all inputs to defaults?')) location.reload();
+}
+
+// Rail material helper — updates f0 input when preset selected
+function updateRailMaterial() {
+  const mat = val('rail-material');
+  const f0Map = { 'AL6005-T5': 215, 'AL6061-T6': 276, 'AL6082-T6': 260 };
+  const label = { 'AL6005-T5': '215 MPa (AL6005-T5)', 'AL6061-T6': '276 MPa (AL6061-T6)', 'AL6082-T6': '260 MPa (AL6082-T6)' };
+  const f0El = document.getElementById('rail-f0');
+  const autoEl = document.getElementById('rail-f0-auto');
+  if (mat !== 'custom' && f0El) {
+    f0El.value = f0Map[mat] || 215;
+    f0El.readOnly = true;
+    f0El.style.background = '#eee';
+    if (autoEl) autoEl.textContent = label[mat] || '';
+  } else {
+    f0El.readOnly = false;
+    f0El.style.background = '';
+    if (autoEl) autoEl.textContent = 'Enter manually';
+  }
+}
+
+// Update derived area display when rail-length or rail-mass changes
+function updateRailDerived() {
+  const len = numVal('rail-length', 4400);
+  const mass = numVal('rail-mass', 6550);
+  const linMass = mass / len;       // g/mm
+  const areaMM2 = linMass / 0.0027; // mm²
+  const el = document.getElementById('rail-derived');
+  if (el) el.textContent =
+    `Derived cross-section area: ${areaMM2.toFixed(0)} mm²  |  Linear mass: ${(linMass*1000).toFixed(1)} g/m = ${linMass.toFixed(4)} kg/m`;
+}
+
+// ======================================================
+// INIT
+// ======================================================
+document.addEventListener('DOMContentLoaded', () => {
+  // Set today's date
+  document.getElementById('proj-date').value = new Date().toISOString().split('T')[0];
+
+  // Wire up live updates
+  ['importance-level','design-life'].forEach(id =>
+    document.getElementById(id).addEventListener('change', updateARI));
+  updateARI();
+
+  // Panel diagram updates
+  ['panel-tilt','panel-h','clearance-bottom','post-height'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', drawPanelDiagram);
+  });
+
+  // Compass updates
+  document.getElementById('panel-azimuth').addEventListener('input', () => {
+    drawCompass(numVal('panel-azimuth', 0));
+    updateDirectionTable();
+  });
+
+  drawPanelDiagram();
+  drawCompass(0);
+  updateDirectionTable();
+  initAddressAutocomplete();
+  // Wire up Cfig auto-update
+  const polePosEl = document.getElementById('pole-position');
+  if (polePosEl) polePosEl.addEventListener('change', updatePoleCfig);
+});
+
+function updateDirectionTable() {
+  const region = val('wind-region') || 'NZ2';
+  const MdRow = MD_TABLE[region] || MD_TABLE['NZ2'];
+  const azimuth = numVal('panel-azimuth', 0);
+  let html = `<table class="result-table"><tr><th>Direction</th><th>Md</th><th>Panel angle to wind</th><th>Critical?</th></tr>`;
+  DIRS.forEach((dir, i) => {
+    // Angle difference between wind direction and panel normal
+    const windFrom = DIR_ANGLES[i]; // wind comes FROM this direction
+    const windToward = (windFrom + 180) % 360; // wind goes TOWARD
+    let diff = Math.abs(azimuth - windToward);
+    if (diff > 180) diff = 360 - diff;
+    const isCrit = diff < 30 || diff > 150;
+    html += `<tr>
+      <td>${dir}</td>
+      <td class="num">${MdRow[i].toFixed(2)}</td>
+      <td class="num">${diff.toFixed(0)}°</td>
+      <td style="color:${isCrit ? 'var(--red)' : '#888'}">${isCrit ? '⚠ Critical' : '—'}</td>
+    </tr>`;
+  });
+  html += '</table>';
+  document.getElementById('direction-table').innerHTML = html;
+}
+
+// Wire up rail inputs for live derived-area display
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('wind-region').addEventListener('change', updateDirectionTable);
+});
+</script>
+</body>
+</html>
